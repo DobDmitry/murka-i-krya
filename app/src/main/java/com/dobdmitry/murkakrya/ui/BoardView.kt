@@ -39,8 +39,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import murka.core.Board
-import murka.core.Player
+import kira.core.Board
+import kira.core.Side
 
 /**
  * Поле 3x3 во весь экран: линии нарисованы от руки, ячейки огромные,
@@ -49,8 +49,10 @@ import murka.core.Player
 @Composable
 fun BoardView(
     board: Board,
+    heroCast: Cast,
+    opponentCast: Cast,
     winLine: List<Int>?,
-    winner: Player?,
+    winner: Cast?,
     eraseProgress: Float,
     enabled: Boolean,
     roundSeed: Int,
@@ -101,9 +103,10 @@ fun BoardView(
                 ) {
                     for (column in 0..2) {
                         val index = row * 3 + column
+                        val side = board[index]
                         Cell(
                             index = index,
-                            player = board[index],
+                            character = side?.let { if (it == Side.FIRST) heroCast else opponentCast },
                             winning = winLine?.contains(index) == true,
                             enabled = enabled && board.isEmpty(index),
                             alpha = eraseAlpha(column, eraseProgress),
@@ -138,7 +141,7 @@ private fun eraseAlpha(column: Int, progress: Float): Float {
     return 1f - ((progress - start) / (end - start)).coerceIn(0f, 1f)
 }
 
-private fun DrawScope.drawWinLine(line: List<Int>, winner: Player, progress: Float, seed: Int) {
+private fun DrawScope.drawWinLine(line: List<Int>, winner: Cast, progress: Float, seed: Int) {
     val cell = size.minDimension / 3f
     fun center(index: Int) = Offset((index % 3 + 0.5f) * cell, (index / 3 + 0.5f) * cell)
     val from = center(line.first())
@@ -198,7 +201,7 @@ private fun DrawScope.drawEraser(progress: Float) {
 @Composable
 private fun Cell(
     index: Int,
-    player: Player?,
+    character: Cast?,
     winning: Boolean,
     enabled: Boolean,
     alpha: Float,
@@ -235,9 +238,9 @@ private fun Cell(
                 )
             }
     ) {
-        if (player != null) {
+        if (character != null) {
             Piece(
-                player = player,
+                character = character,
                 index = index,
                 winning = winning,
                 alpha = alpha,
@@ -254,17 +257,17 @@ private fun Cell(
  */
 @Composable
 private fun Piece(
-    player: Player,
+    character: Cast,
     index: Int,
     winning: Boolean,
     alpha: Float,
     roundSeed: Int,
     modifier: Modifier = Modifier,
 ) {
-    val drop = remember(player, index, roundSeed) { Animatable(1f) }
-    val dust = remember(player, index, roundSeed) { Animatable(0f) }
+    val drop = remember(character, index, roundSeed) { Animatable(1f) }
+    val dust = remember(character, index, roundSeed) { Animatable(0f) }
 
-    LaunchedEffect(player, index, roundSeed) {
+    LaunchedEffect(character, index, roundSeed) {
         drop.snapTo(1f)
         dust.snapTo(0f)
         launch {
@@ -302,7 +305,7 @@ private fun Piece(
                 }
         ) {
             LivingCharacter(
-                player = player,
+                character = character,
                 modifier = Modifier.fillMaxSize(),
                 seed = index % 3,
             )

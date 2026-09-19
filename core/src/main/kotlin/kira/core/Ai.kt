@@ -1,21 +1,21 @@
-package murka.core
+package kira.core
 
 import kotlin.random.Random
 
 /** Соперник-компьютер: по положению фигур выбирает клетку. */
 interface Ai {
     /** Индекс клетки (0..8), которую займёт [me]. Всегда легальный ход: ИИ не пропускает. */
-    fun chooseMove(board: Board, me: Player): Int
+    fun chooseMove(board: Board, me: Side): Int
 }
 
 fun aiFor(difficulty: Difficulty, random: Random = Random.Default): Ai = when (difficulty) {
-    Difficulty.KITTEN -> KittenAi(random)
-    Difficulty.CAT -> CatAi(random)
-    Difficulty.LION -> LionAi(random)
+    Difficulty.EASY -> EasyAi(random)
+    Difficulty.MEDIUM -> MediumAi(random)
+    Difficulty.HARD -> PerfectAi(random)
 }
 
 /**
- * КОТЁНОК — «ЛЕГКО».
+ * Лёгкий уровень.
  *
  * Проигрывает часто, но не поддаётся демонстративно:
  *  - никогда не пропускает ход;
@@ -24,9 +24,9 @@ fun aiFor(difficulty: Difficulty, random: Random = Random.Default): Ai = when (d
  *  - свой выигрыш чаще всего забирает;
  *  - каждый ход старается выглядеть осмысленным — тянет собственную линию.
  */
-class KittenAi(private val random: Random = Random.Default) : Ai {
+class EasyAi(private val random: Random = Random.Default) : Ai {
 
-    override fun chooseMove(board: Board, me: Player): Int {
+    override fun chooseMove(board: Board, me: Side): Int {
         val free = board.emptyCells()
         require(free.isNotEmpty()) { "Ходить некуда" }
         if (free.size == 1) return free[0]
@@ -54,7 +54,7 @@ class KittenAi(private val random: Random = Random.Default) : Ai {
     }
 
     /** Клетки самой угрозы и всё, что к ней вплотную примыкает. */
-    private fun cellsAroundThreats(board: Board, opponent: Player): Set<Int> {
+    private fun cellsAroundThreats(board: Board, opponent: Side): Set<Int> {
         val result = mutableSetOf<Int>()
         for (line in Rules.LINES) {
             val mine = line.count { board[it] == opponent }
@@ -68,7 +68,7 @@ class KittenAi(private val random: Random = Random.Default) : Ai {
     }
 
     /** Ход, который выглядит осмысленным: продолжает свою линию, иначе — наугад. */
-    private fun purposefulMove(board: Board, me: Player, candidates: List<Int>): Int {
+    private fun purposefulMove(board: Board, me: Side, candidates: List<Int>): Int {
         if (random.nextDouble() < PURPOSEFUL_CHANCE) {
             val building = candidates.filter { cell ->
                 val after = board.withMove(cell, me)
@@ -84,10 +84,10 @@ class KittenAi(private val random: Random = Random.Default) : Ai {
     }
 
     private companion object {
-        /** Как часто котёнок забирает свой выигрыш. */
+        /** Как часто лёгкий соперник забирает свой выигрыш. */
         const val TAKE_WIN_CHANCE = 0.5
 
-        /** Как часто он замечает чужую угрозу. Редко — на то и «ЛЕГКО». */
+        /** Как часто он замечает чужую угрозу. Редко — на то и лёгкий уровень. */
         const val BLOCK_CHANCE = 0.12
 
         /** Как часто ход тянет собственную линию, а не просто занимает клетку. */
@@ -96,14 +96,14 @@ class KittenAi(private val random: Random = Random.Default) : Ai {
 }
 
 /**
- * КОТ — «СРЕДНЕ».
+ * Средний уровень.
  *
  * Забирает свой выигрыш, блокирует очевидную угрозу, дальше держится
  * простого порядка «центр → угол → край». Вилки не строит и от вилок не защищается.
  */
-class CatAi(private val random: Random = Random.Default) : Ai {
+class MediumAi(private val random: Random = Random.Default) : Ai {
 
-    override fun chooseMove(board: Board, me: Player): Int {
+    override fun chooseMove(board: Board, me: Side): Int {
         val free = board.emptyCells()
         require(free.isNotEmpty()) { "Ходить некуда" }
 
@@ -119,21 +119,21 @@ class CatAi(private val random: Random = Random.Default) : Ai {
 }
 
 /**
- * ЛЕВ — «ТРУДНО».
+ * Трудный уровень.
  *
  * Полный минимакс с запоминанием позиций: выигрывает при любой ошибке соперника
  * и никогда не проигрывает. Быстрая победа ценится выше долгой, долгое
  * поражение — выше быстрого.
  */
-class LionAi(private val random: Random = Random.Default) : Ai {
+class PerfectAi(private val random: Random = Random.Default) : Ai {
 
     /** Оценки позиций переиспользуются между ходами: партия просчитывается один раз. */
     private val memo = HashMap<String, Int>()
 
-    override fun chooseMove(board: Board, me: Player): Int = bestMoves(board, me).random(random)
+    override fun chooseMove(board: Board, me: Side): Int = bestMoves(board, me).random(random)
 
     /** Все одинаково сильные ходы. Публично — на этом держатся тесты. */
-    fun bestMoves(board: Board, me: Player): List<Int> {
+    fun bestMoves(board: Board, me: Side): List<Int> {
         val free = board.emptyCells()
         require(free.isNotEmpty()) { "Ходить некуда" }
         var best = Int.MIN_VALUE
@@ -153,8 +153,8 @@ class LionAi(private val random: Random = Random.Default) : Ai {
 
     private fun score(
         board: Board,
-        me: Player,
-        turn: Player,
+        me: Side,
+        turn: Side,
         depth: Int,
     ): Int {
         val key = board.code() + turn.name.first() + me.name.first()

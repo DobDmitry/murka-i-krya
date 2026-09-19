@@ -11,7 +11,6 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
-import murka.core.Player
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.min
@@ -72,21 +71,6 @@ fun DrawScope.drawRobot(center: Offset, radius: Float, alpha: Float = 1f) {
         strokeWidth = stroke,
         cap = StrokeCap.Round,
     )
-}
-
-/** Лев: та же кошачья морда, но с гривой — сразу видно, что зверь серьёзный. */
-fun DrawScope.drawLion(center: Offset, radius: Float) {
-    val mane = Palette.MurkaDark
-    for (i in 0 until 12) {
-        val angle = (i / 12f) * 2f * PI.toFloat()
-        drawCircle(
-            color = mane,
-            radius = radius * 0.34f,
-            center = Offset(center.x + cos(angle) * radius * 1.05f, center.y + sin(angle) * radius * 1.05f),
-        )
-    }
-    drawCircle(Palette.Murka, radius * 1.02f, center)
-    drawMurka(center, radius * 0.86f)
 }
 
 fun DrawScope.drawRepeat(center: Offset, radius: Float, color: Color) {
@@ -186,19 +170,21 @@ fun IconCanvas(modifier: Modifier = Modifier, draw: DrawScope.(Offset, Float) ->
     }
 }
 
+/** Значок раздела «играем вдвоём»: два лица рядом. */
 @Composable
-fun TwoFacesIcon(modifier: Modifier = Modifier) {
+fun PeopleBadge(modifier: Modifier = Modifier) {
     IconCanvas(modifier) { center, radius ->
-        drawMurka(Offset(center.x - radius * 0.45f, center.y + radius * 0.1f), radius * 0.52f)
-        drawKrya(Offset(center.x + radius * 0.50f, center.y + radius * 0.18f), radius * 0.52f)
+        drawKira(Offset(center.x - radius * 0.46f, center.y + radius * 0.10f), radius * 0.44f)
+        drawPapa(Offset(center.x + radius * 0.50f, center.y + radius * 0.14f), radius * 0.44f)
     }
 }
 
+/** Значок раздела «играем с компьютером»: лицо и робот. */
 @Composable
-fun FaceAndRobotIcon(modifier: Modifier = Modifier) {
+fun RobotBadge(modifier: Modifier = Modifier) {
     IconCanvas(modifier) { center, radius ->
-        drawMurka(Offset(center.x - radius * 0.48f, center.y + radius * 0.12f), radius * 0.50f)
-        drawRobot(Offset(center.x + radius * 0.52f, center.y + radius * 0.18f), radius * 0.46f)
+        drawKira(Offset(center.x - radius * 0.48f, center.y + radius * 0.12f), radius * 0.44f)
+        drawRobot(Offset(center.x + radius * 0.52f, center.y + radius * 0.16f), radius * 0.44f)
     }
 }
 
@@ -207,19 +193,22 @@ fun StarIcon(modifier: Modifier = Modifier, color: Color = Palette.Krya, filled:
     IconCanvas(modifier) { center, radius -> drawStar(center, radius, color, filled) }
 }
 
+/**
+ * Звёздочки силы соперника: одна — играет слабо, три — играет идеально.
+ * Цифр и слов тут нет намеренно: звёздочки понятны без чтения.
+ */
 @Composable
-fun PlayerIcon(player: Player, modifier: Modifier = Modifier, dimmed: Boolean = false) {
-    CharacterIcon(player, modifier, dimmed)
-}
-
-/** Иконки уровней: котёнок — кот — лев. */
-@Composable
-fun LevelIcon(level: murka.core.Difficulty, modifier: Modifier = Modifier) {
-    IconCanvas(modifier) { center, radius ->
-        when (level) {
-            murka.core.Difficulty.KITTEN -> drawMurka(center, radius * 0.62f)
-            murka.core.Difficulty.CAT -> drawMurka(center, radius * 0.88f)
-            murka.core.Difficulty.LION -> rotate(0f, pivot = center) { drawLion(center, radius * 0.66f) }
+fun StrengthStars(count: Int, modifier: Modifier = Modifier, total: Int = 3) {
+    Canvas(modifier = modifier) {
+        val step = size.width / total
+        val radius = (step * 0.34f).coerceAtMost(size.height * 0.46f)
+        for (i in 0 until total) {
+            drawStar(
+                center = Offset(step * (i + 0.5f), size.height / 2f),
+                radius = radius,
+                color = if (i < count) Palette.Fox else Palette.Pencil,
+                filled = i < count,
+            )
         }
     }
 }

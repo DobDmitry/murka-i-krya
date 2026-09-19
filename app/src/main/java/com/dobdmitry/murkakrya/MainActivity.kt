@@ -9,7 +9,7 @@ import androidx.activity.ComponentActivity
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dobdmitry.murkakrya.ui.GameScreen
 import com.dobdmitry.murkakrya.ui.LocalSpeaker
-import com.dobdmitry.murkakrya.ui.MurkaTheme
+import com.dobdmitry.murkakrya.ui.GameTheme
 import com.dobdmitry.murkakrya.ui.StartScreen
 
 /**
@@ -24,7 +24,7 @@ class MainActivity : ComponentActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         setContent {
-            MurkaTheme {
+            GameTheme {
                 val model: GameViewModel = viewModel()
                 val ui = model.ui
 
@@ -35,9 +35,8 @@ class MainActivity : ComponentActivity() {
                     when (ui.screen) {
                         Screen.START -> StartScreen(
                             soundOn = ui.soundOn,
-                            difficulty = ui.difficulty,
-                            onTwoPlayers = model::chooseTwoPlayers,
-                            onAi = model::chooseAi,
+                            onPerson = model::playWithPerson,
+                            onAnimal = model::playWithAnimal,
                             onToggleSound = model::toggleSound,
                             onExit = { finish() },
                         )

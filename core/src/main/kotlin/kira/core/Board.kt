@@ -1,4 +1,4 @@
-package murka.core
+package kira.core
 
 /**
  * Неизменяемое поле 3x3. Клетки нумеруются слева направо, сверху вниз:
@@ -9,9 +9,9 @@ package murka.core
  * 6 7 8
  * ```
  */
-class Board private constructor(private val cells: Array<Player?>) {
+class Board private constructor(private val cells: Array<Side?>) {
 
-    operator fun get(index: Int): Player? = cells[index]
+    operator fun get(index: Int): Side? = cells[index]
 
     fun isEmpty(index: Int): Boolean = cells[index] == null
 
@@ -24,7 +24,7 @@ class Board private constructor(private val cells: Array<Player?>) {
     fun emptyCells(): List<Int> = (0 until SIZE).filter { cells[it] == null }
 
     /** Возвращает новое поле с поставленной фигурой. Занятую клетку занять нельзя. */
-    fun withMove(index: Int, player: Player): Board {
+    fun withMove(index: Int, player: Side): Board {
         require(index in 0 until SIZE) { "Клетки $index не существует" }
         require(cells[index] == null) { "Клетка $index уже занята" }
         val next = cells.copyOf()
@@ -32,13 +32,13 @@ class Board private constructor(private val cells: Array<Player?>) {
         return Board(next)
     }
 
-    /** Компактная запись поля: 9 символов, 'M' — Мурка, 'K' — Кря, '.' — пусто. */
+    /** Компактная запись поля: 9 символов, 'A' — первый игрок, 'B' — второй, '.' — пусто. */
     fun code(): String = buildString {
         for (cell in cells) {
             append(
                 when (cell) {
-                    Player.MURKA -> 'M'
-                    Player.KRYA -> 'K'
+                    Side.FIRST -> 'A'
+                    Side.SECOND -> 'B'
                     null -> '.'
                 }
             )
@@ -61,11 +61,11 @@ class Board private constructor(private val cells: Array<Player?>) {
         fun of(code: String): Board {
             val clean = code.filterNot { it.isWhitespace() }
             require(clean.length == SIZE) { "Нужно ровно $SIZE клеток, получено ${clean.length}" }
-            val cells = arrayOfNulls<Player>(SIZE)
+            val cells = arrayOfNulls<Side>(SIZE)
             clean.forEachIndexed { index, symbol ->
                 cells[index] = when (symbol) {
-                    'M', 'm' -> Player.MURKA
-                    'K', 'k' -> Player.KRYA
+                    'A', 'a' -> Side.FIRST
+                    'B', 'b' -> Side.SECOND
                     '.', '-', '_' -> null
                     else -> throw IllegalArgumentException("Непонятный символ '$symbol'")
                 }

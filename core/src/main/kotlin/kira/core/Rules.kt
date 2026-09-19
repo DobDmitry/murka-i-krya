@@ -1,4 +1,4 @@
-package murka.core
+package kira.core
 
 /** Правила игры: восемь линий, победа, ничья. Чистый Kotlin, без Android. */
 object Rules {
@@ -15,11 +15,11 @@ object Rules {
         listOf(2, 4, 6),
     )
 
-    /** Кто ходит на пустом поле. Первой всегда начинает Мурка. */
-    val FIRST_PLAYER: Player = Player.MURKA
+    /** Кто ходит на пустом поле. Первой всегда начинает Кира. */
+    val FIRST_PLAYER: Side = Side.FIRST
 
     /** Чей ход при текущем положении фигур (без учёта того, закончена ли партия). */
-    fun turnFor(board: Board): Player =
+    fun turnFor(board: Board): Side =
         if (board.moveCount % 2 == 0) FIRST_PLAYER else FIRST_PLAYER.opponent
 
     /** Состояние партии по положению фигур. */
@@ -37,7 +37,7 @@ object Rules {
     fun winningLine(board: Board): List<Int>? = (state(board) as? GameState.Win)?.line
 
     /** Клетки, заняв которые [player] выигрывает прямо сейчас. */
-    fun winningMoves(board: Board, player: Player): List<Int> =
+    fun winningMoves(board: Board, player: Side): List<Int> =
         board.emptyCells().filter { cell ->
             val after = board.withMove(cell, player)
             (state(after) as? GameState.Win)?.winner == player
@@ -47,13 +47,13 @@ object Rules {
      * Ходы, после которых у [player] появляется сразу две угрозы (вилка).
      * Используется ИИ и тестами.
      */
-    fun forkMoves(board: Board, player: Player): List<Int> =
+    fun forkMoves(board: Board, player: Side): List<Int> =
         board.emptyCells().filter { cell ->
             val after = board.withMove(cell, player)
             state(after) is GameState.Playing && winningMoves(after, player).size >= 2
         }
 
-    /** Соседние клетки (включая диагональные) — нужны ИИ уровня «котёнок». */
+    /** Соседние клетки (включая диагональные) — нужны лёгкому уровню ИИ. */
     fun neighbours(cell: Int): List<Int> {
         val row = cell / 3
         val column = cell % 3

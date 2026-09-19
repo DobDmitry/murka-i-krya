@@ -1,12 +1,5 @@
 package com.dobdmitry.murkakrya.ui
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,34 +11,33 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import murka.core.Difficulty
-import murka.core.Player
 
 /**
- * Стартовый экран: никаких меню и инструкций, только иконки.
- * Две мордочки — играем вдвоём, мордочка с роботом — играем с компьютером.
+ * Стартовый экран: ни меню, ни настроек, только лица.
+ *
+ * Сверху Кира — она играет всегда. Ниже два живых соперника (мама и папа):
+ * это игра вдвоём на одном телефоне. Ещё ниже звери — это игра с компьютером,
+ * звёздочки под каждым показывают, насколько сильно он играет.
  */
 @Composable
 fun StartScreen(
     soundOn: Boolean,
-    difficulty: Difficulty,
-    onTwoPlayers: () -> Unit,
-    onAi: (Difficulty) -> Unit,
+    onPerson: (Cast) -> Unit,
+    onAnimal: (Cast) -> Unit,
     onToggleSound: () -> Unit,
     onExit: () -> Unit,
 ) {
-    var levelsVisible by remember { mutableStateOf(false) }
     val speaker = LocalSpeaker.current
-    androidx.compose.runtime.LaunchedEffect(Unit) { speaker("Мурка и Кря. Играем!") }
+    LaunchedEffect(Unit) { speaker("Кира, с кем играем?") }
 
     Box(Modifier.fillMaxSize()) {
         Canvas(Modifier.fillMaxSize()) { drawWarmBackground() }
@@ -53,78 +45,68 @@ fun StartScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 12.dp, vertical = 10.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             TopBar(soundOn = soundOn, onToggleSound = onToggleSound, onExit = onExit)
 
-            Spacer(Modifier.height(8.dp))
+            // Хозяйка игры
+            LivingCharacter(
+                character = Cast.HERO,
+                modifier = Modifier.size(128.dp),
+                seed = 0,
+            )
+            SpokenLabel(
+                phrase = Phrases.name(Cast.HERO),
+                style = MaterialTheme.typography.displayMedium,
+                speak = false,
+            )
 
+            Spacer(Modifier.height(14.dp))
+
+            // Живые соперники: играем вдвоём на одном телефоне
+            PeopleBadge(Modifier.size(58.dp))
             Row(
-                horizontalArrangement = Arrangement.spacedBy(24.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
-                NameCard(Player.MURKA)
-                NameCard(Player.KRYA)
+                for (person in Cast.PEOPLE) {
+                    CharacterButton(
+                        character = person,
+                        onClick = { onPerson(person) },
+                        iconSize = 104.dp,
+                    )
+                }
             }
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(16.dp))
 
-            BigButton(
-                phrase = Phrases.TOGETHER,
-                onClick = onTwoPlayers,
-                iconSize = 104.dp,
-            ) { modifier -> TwoFacesIcon(modifier) }
-
-            Spacer(Modifier.height(18.dp))
-
-            BigButton(
-                phrase = Phrases.ROBOT,
-                onClick = { levelsVisible = !levelsVisible },
-                iconSize = 104.dp,
-                highlighted = levelsVisible,
-            ) { modifier -> FaceAndRobotIcon(modifier) }
-
-            AnimatedVisibility(
-                visible = levelsVisible,
-                enter = fadeIn() + expandVertically(animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)),
-                exit = fadeOut() + shrinkVertically(),
-            ) {
+            // Компьютерные соперники: звёздочки показывают силу
+            RobotBadge(Modifier.size(58.dp))
+            val animals = Cast.ANIMALS
+            for (rowIndex in 0 until (animals.size + 2) / 3) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 14.dp),
+                        .padding(top = 6.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly,
                 ) {
-                    for (level in Difficulty.values()) {
-                        BigButton(
-                            phrase = Phrases.level(level),
-                            onClick = { onAi(level) },
-                            iconSize = 72.dp,
-                            highlighted = level == difficulty,
-                        ) { modifier -> LevelIcon(level, modifier) }
+                    for (animal in animals.drop(rowIndex * 3).take(3)) {
+                        CharacterButton(
+                            character = animal,
+                            onClick = { onAnimal(animal) },
+                            iconSize = 84.dp,
+                            showStrength = true,
+                        )
                     }
                 }
             }
 
-            Spacer(Modifier.weight(1f))
+            Spacer(Modifier.height(16.dp))
         }
-    }
-}
-
-@Composable
-private fun NameCard(player: Player) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        LivingCharacter(
-            player = player,
-            modifier = Modifier.size(116.dp),
-            seed = if (player == Player.MURKA) 0 else 2,
-        )
-        SpokenLabel(
-            phrase = Phrases.name(player),
-            style = MaterialTheme.typography.headlineMedium,
-            speak = false,
-        )
     }
 }
 
@@ -149,21 +131,18 @@ fun TopBar(
                 IconCanvas(modifier) { center, radius -> drawHome(center, radius, Palette.Pencil) }
             }
         } else {
-            Spacer(Modifier.size(64.dp))
+            Spacer(Modifier.width(64.dp))
         }
 
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            BigButton(
-                phrase = Phrases.SOUND,
-                onClick = onToggleSound,
-                iconSize = 46.dp,
-                background = Palette.Cream,
-                icon = { modifier ->
-                    IconCanvas(modifier) { center, radius ->
-                        drawSpeaker(center, radius, soundOn, Palette.Ink)
-                    }
-                },
-            )
-        }
+        BigButton(
+            phrase = Phrases.SOUND,
+            onClick = onToggleSound,
+            iconSize = 46.dp,
+            icon = { modifier ->
+                IconCanvas(modifier) { center, radius ->
+                    drawSpeaker(center, radius, soundOn, Palette.Ink)
+                }
+            },
+        )
     }
 }

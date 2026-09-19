@@ -1,4 +1,4 @@
-package murka.core
+package kira.core
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -17,7 +17,7 @@ class RulesTest {
     @Test
     fun `победа по каждой из восьми линий для обоих персонажей`() {
         for (line in Rules.LINES) {
-            for (player in Player.values()) {
+            for (player in Side.values()) {
                 var board = Board.empty()
                 val others = (0..8).filterNot { it in line }
                 // Линию занимает победитель, соперник ставит фигуры в стороне.
@@ -39,9 +39,9 @@ class RulesTest {
     fun `ничья на полном поле без линии`() {
         val board = Board.of(
             """
-            MMK
-            KKM
-            MKM
+            AAB
+            BBA
+            ABA
             """
         )
         assertEquals(GameState.Draw, Rules.state(board))
@@ -51,36 +51,36 @@ class RulesTest {
 
     @Test
     fun `незаконченная партия — ход того, кто должен ходить`() {
-        assertEquals(GameState.Playing(Player.MURKA), Rules.state(Board.empty()))
-        val afterFirst = Board.empty().withMove(4, Player.MURKA)
-        assertEquals(GameState.Playing(Player.KRYA), Rules.state(afterFirst))
+        assertEquals(GameState.Playing(Side.FIRST), Rules.state(Board.empty()))
+        val afterFirst = Board.empty().withMove(4, Side.FIRST)
+        assertEquals(GameState.Playing(Side.SECOND), Rules.state(afterFirst))
         assertFalse(Rules.state(afterFirst).isOver)
     }
 
     @Test
     fun `победа важнее полного поля`() {
-        val board = Board.of("MMMKKMMKK")
+        val board = Board.of("AAABBAABB")
         val state = Rules.state(board)
         assertTrue(state is GameState.Win)
-        assertEquals(Player.MURKA, (state as GameState.Win).winner)
+        assertEquals(Side.FIRST, (state as GameState.Win).winner)
     }
 
     @Test
     fun `выигрышные ходы находятся во всех направлениях`() {
-        assertEquals(listOf(2), Rules.winningMoves(Board.of("MM.KK...."), Player.MURKA))
-        assertEquals(listOf(5), Rules.winningMoves(Board.of("MM.KK...."), Player.KRYA))
-        assertEquals(listOf(8), Rules.winningMoves(Board.of("M...M...."), Player.MURKA))
-        assertTrue(Rules.winningMoves(Board.empty(), Player.MURKA).isEmpty())
+        assertEquals(listOf(2), Rules.winningMoves(Board.of("AA.BB...."), Side.FIRST))
+        assertEquals(listOf(5), Rules.winningMoves(Board.of("AA.BB...."), Side.SECOND))
+        assertEquals(listOf(8), Rules.winningMoves(Board.of("A...A...."), Side.FIRST))
+        assertTrue(Rules.winningMoves(Board.empty(), Side.FIRST).isEmpty())
     }
 
     @Test
     fun `вилка — это два выигрышных хода сразу`() {
-        // Мурка в двух углах, ход в третий угол создаёт две угрозы.
-        val board = Board.of("M...K...M")
-        val forks = Rules.forkMoves(board, Player.MURKA)
+        // Первый игрок в двух углах, ход в третий угол создаёт две угрозы.
+        val board = Board.of("A...B...A")
+        val forks = Rules.forkMoves(board, Side.FIRST)
         assertTrue(forks.isNotEmpty())
         for (fork in forks) {
-            assertEquals(2, Rules.winningMoves(board.withMove(fork, Player.MURKA), Player.MURKA).size)
+            assertEquals(2, Rules.winningMoves(board.withMove(fork, Side.FIRST), Side.FIRST).size)
         }
     }
 
@@ -94,11 +94,11 @@ class RulesTest {
     @Test
     fun `поле неизменяемо и разбирается из записи`() {
         val board = Board.empty()
-        val next = board.withMove(0, Player.MURKA)
+        val next = board.withMove(0, Side.FIRST)
         assertTrue(board.isEmpty(0))
-        assertEquals(Player.MURKA, next[0])
-        assertEquals("M........", next.code())
-        assertEquals(next, Board.of("M........"))
-        assertEquals(next.hashCode(), Board.of("M........").hashCode())
+        assertEquals(Side.FIRST, next[0])
+        assertEquals("A........", next.code())
+        assertEquals(next, Board.of("A........"))
+        assertEquals(next.hashCode(), Board.of("A........").hashCode())
     }
 }

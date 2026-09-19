@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Единственная строка ресурсов: имя приложения на экране телефона.
-         Все игровые надписи живут в ui/Phrases.kt рядом с озвучкой. -->
-    <string name="app_name">МУРКА и КРЯ</string>
+         Все игровые надписи живут в ui/Cast.kt и ui/Phrases.kt рядом с озвучкой. -->
+    <string name="app_name">КИРА</string>
 </resources>

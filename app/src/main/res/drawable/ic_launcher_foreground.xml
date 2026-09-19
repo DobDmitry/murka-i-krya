@@ -5,32 +5,34 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Ушки -->
-    <path android:fillColor="#F2994A" android:pathData="M36,44 L41,24 L56,38 Z" />
-    <path android:fillColor="#F2994A" android:pathData="M72,44 L67,24 L52,38 Z" />
-    <path android:fillColor="#EE7FA0" android:pathData="M41,42 L44,31 L52,39 Z" />
-    <path android:fillColor="#EE7FA0" android:pathData="M67,42 L64,31 L56,39 Z" />
+    <!-- Хвостики -->
+    <path android:fillColor="#8A5A34" android:pathData="M30,48 m-10,0 a10,10 0 1,0 20,0 a10,10 0 1,0 -20,0" />
+    <path android:fillColor="#8A5A34" android:pathData="M78,48 m-10,0 a10,10 0 1,0 20,0 a10,10 0 1,0 -20,0" />
 
-    <!-- Голова -->
-    <path
-        android:fillColor="#F2994A"
-        android:pathData="M54,58 m-24,0 a24,24 0 1,0 48,0 a24,24 0 1,0 -48,0" />
+    <!-- Лицо -->
+    <path android:fillColor="#FFD6B0" android:pathData="M54,56 m-25,0 a25,25 0 1,0 50,0 a25,25 0 1,0 -50,0" />
+
+    <!-- Чёлка -->
+    <path android:fillColor="#8A5A34" android:pathData="M29,56 a25,25 0 0,1 50,0 l0,-6 a25,14 0 0,0 -50,0 z" />
+    <path android:fillColor="#8A5A34" android:pathData="M30,52 a24,24 0 0,1 48,0 l0,-8 a24,18 0 0,0 -48,0 z" />
+
+    <!-- Бантик -->
+    <path android:fillColor="#EE7FA0" android:pathData="M26,36 m-6,0 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0" />
+    <path android:fillColor="#EE7FA0" android:pathData="M38,36 m-6,0 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0" />
+    <path android:fillColor="#C0506F" android:pathData="M32,36 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
 
     <!-- Глаза -->
-    <path android:fillColor="#5B4436" android:pathData="M45,54 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" />
-    <path android:fillColor="#5B4436" android:pathData="M63,54 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" />
+    <path android:fillColor="#5B4436" android:pathData="M45,55 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" />
+    <path android:fillColor="#5B4436" android:pathData="M63,55 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" />
 
-    <!-- Нос и улыбка -->
-    <path android:fillColor="#EE7FA0" android:pathData="M50,63 L58,63 L54,69 Z" />
+    <!-- Румянец -->
+    <path android:fillColor="#F7B6C7" android:pathData="M38,65 m-5,0 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0" />
+    <path android:fillColor="#F7B6C7" android:pathData="M70,65 m-5,0 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0" />
+
+    <!-- Улыбка -->
     <path
         android:strokeColor="#5B4436"
-        android:strokeWidth="2"
+        android:strokeWidth="3"
         android:strokeLineCap="round"
-        android:pathData="M46,70 q8,7 16,0" />
-
-    <!-- Усы -->
-    <path android:strokeColor="#B9682A" android:strokeWidth="2" android:strokeLineCap="round" android:pathData="M42,66 L30,63" />
-    <path android:strokeColor="#B9682A" android:strokeWidth="2" android:strokeLineCap="round" android:pathData="M42,70 L30,72" />
-    <path android:strokeColor="#B9682A" android:strokeWidth="2" android:strokeLineCap="round" android:pathData="M66,66 L78,63" />
-    <path android:strokeColor="#B9682A" android:strokeWidth="2" android:strokeLineCap="round" android:pathData="M66,70 L78,72" />
+        android:pathData="M46,68 q8,8 16,0" />
 </vector>

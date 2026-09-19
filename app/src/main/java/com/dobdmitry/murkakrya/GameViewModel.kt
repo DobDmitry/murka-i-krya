@@ -8,56 +8,69 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.dobdmitry.murkakrya.audio.GameAudio
+import com.dobdmitry.murkakrya.ui.Cast
 import com.dobdmitry.murkakrya.ui.Phrase
 import com.dobdmitry.murkakrya.ui.Phrases
+import kira.core.Board
+import kira.core.Difficulty
+import kira.core.GameMode
+import kira.core.GameState
+import kira.core.Rules
+import kira.core.Side
+import kira.core.aiFor
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import murka.core.Board
-import murka.core.Difficulty
-import murka.core.GameMode
-import murka.core.GameState
-import murka.core.Player
-import murka.core.Rules
-import murka.core.aiFor
 import kotlin.random.Random
 
 enum class Screen { START, GAME }
 
-/** Всё, что видно на экране. Партия целиком выводится из [board]. */
+/**
+ * Всё, что видно на экране. Партия целиком выводится из [board],
+ * а кто именно играет — из [opponent]: Кира ходит первой всегда.
+ */
 data class UiState(
     val screen: Screen = Screen.START,
     val mode: GameMode = GameMode.VERSUS_AI,
-    val difficulty: Difficulty = Difficulty.KITTEN,
+    val opponent: Cast = Cast.DEFAULT_OPPONENT,
     val board: Board = Board.empty(),
-    val scoreMurka: Int = 0,
-    val scoreKrya: Int = 0,
+    val scoreHero: Int = 0,
+    val scoreOpponent: Int = 0,
     val soundOn: Boolean = true,
     val roundSeed: Int = 1,
     val erasing: Boolean = false,
     val aiThinking: Boolean = false,
 ) {
+    val hero: Cast get() = Cast.HERO
+
+    fun castOf(side: Side): Cast = if (side == Side.FIRST) hero else opponent
+
     val state: GameState get() = Rules.state(board)
 
-    val winner: Player? get() = (state as? GameState.Win)?.winner
+    val winnerSide: Side? get() = (state as? GameState.Win)?.winner
+
+    val winner: Cast? get() = winnerSide?.let { castOf(it) }
 
     val winLine: List<Int>? get() = (state as? GameState.Win)?.line
 
     val isDraw: Boolean get() = state is GameState.Draw
 
+    val turn: Side? get() = (state as? GameState.Playing)?.turn
+
+    val difficulty: Difficulty get() = opponent.difficulty ?: Difficulty.EASY
+
     /** Надпись, которая сейчас висит над полем. */
     val banner: Phrase
         get() = when (val current = state) {
-            is GameState.Win -> Phrases.win(current.winner)
+            is GameState.Win -> Phrases.win(castOf(current.winner))
             GameState.Draw -> Phrases.DRAW
-            is GameState.Playing -> Phrases.turn(current.turn)
+            is GameState.Playing -> Phrases.turn(castOf(current.turn))
         }
 }
 
 /**
- * Состояние игры живёт здесь, поэтому сворачивание приложения и поворот
- * (он заблокирован, но всё же) партию не ломают: счёт и поле сохраняются
- * в SavedStateHandle.
+ * Состояние игры живёт здесь, поэтому сворачивание приложения партию не ломает:
+ * поле, счёт и выбранный соперник сохраняются в SavedStateHandle.
  */
 class GameViewModel(
     application: Application,
@@ -76,27 +89,39 @@ class GameViewModel(
         scheduleAiMoveIfNeeded()
     }
 
-    // --- Действия игрока ---------------------------------------------------
+    // --- Выбор соперника ---------------------------------------------------
 
-    fun chooseTwoPlayers() {
-        audio.play(GameAudio.Sfx.BLUP)
-        update(ui.copy(mode = GameMode.TWO_PLAYERS, screen = Screen.GAME, board = Board.empty(), roundSeed = ui.roundSeed + 1))
-        announceAfter(Phrases.TOGETHER.speech)
-    }
+    /** Игра один на один: Кира против мамы или папы. */
+    fun playWithPerson(person: Cast) = startGame(GameMode.TWO_PLAYERS, person)
 
-    fun chooseAi(difficulty: Difficulty) {
+    /** Игра против компьютера: соперник — зверь, его сила зашита в него самого. */
+    fun playWithAnimal(animal: Cast) = startGame(GameMode.VERSUS_AI, animal)
+
+    private fun startGame(mode: GameMode, opponent: Cast) {
+        aiJob?.cancel()
         audio.play(GameAudio.Sfx.BLUP)
         update(
             ui.copy(
-                mode = GameMode.VERSUS_AI,
-                difficulty = difficulty,
                 screen = Screen.GAME,
+                mode = mode,
+                opponent = opponent,
                 board = Board.empty(),
+                scoreHero = 0,
+                scoreOpponent = 0,
+                erasing = false,
+                aiThinking = false,
                 roundSeed = ui.roundSeed + 1,
             )
         )
-        announceAfter(Phrases.level(difficulty).speech)
+        // Сначала имя соперника, через секунду — чей ход: фразы не перебивают друг друга.
+        audio.say(opponent.speech, force = true)
+        viewModelScope.launch {
+            delay(1000)
+            announceBanner(force = true)
+        }
     }
+
+    // --- Действия в партии -------------------------------------------------
 
     fun tapCell(index: Int) {
         val current = ui
@@ -133,31 +158,26 @@ class GameViewModel(
         val on = !ui.soundOn
         audio.enabled = on
         update(ui.copy(soundOn = on))
-        // Включили — тут же подтверждаем голосом и звуком, чтобы связь была очевидна.
         audio.play(GameAudio.Sfx.BLUP)
         audio.say(Phrases.SOUND.speech, force = true)
     }
 
-    fun resetScore() {
-        update(ui.copy(scoreMurka = 0, scoreKrya = 0))
-    }
-
-    /** Озвучка надписи — ею пользуется UI при появлении любого слова. */
+    /** Озвучка надписи — ею пользуется интерфейс при появлении любого слова. */
     fun say(phrase: String) = audio.say(phrase)
 
     fun blup() = audio.play(GameAudio.Sfx.BLUP)
 
     // --- Внутреннее --------------------------------------------------------
 
-    private fun makeMove(index: Int, player: Player) {
+    private fun makeMove(index: Int, side: Side) {
         audio.play(GameAudio.Sfx.BLUP)
-        val board = ui.board.withMove(index, player)
+        val board = ui.board.withMove(index, side)
         var next = ui.copy(board = board)
         val state = Rules.state(board)
         if (state is GameState.Win) {
             next = when (state.winner) {
-                Player.MURKA -> next.copy(scoreMurka = (next.scoreMurka + 1).coerceAtMost(MAX_SCORE))
-                Player.KRYA -> next.copy(scoreKrya = (next.scoreKrya + 1).coerceAtMost(MAX_SCORE))
+                Side.FIRST -> next.copy(scoreHero = (next.scoreHero + 1).coerceAtMost(MAX_SCORE))
+                Side.SECOND -> next.copy(scoreOpponent = (next.scoreOpponent + 1).coerceAtMost(MAX_SCORE))
             }
         }
         update(next)
@@ -193,26 +213,17 @@ class GameViewModel(
         aiJob?.cancel()
         update(current.copy(aiThinking = true))
         aiJob = viewModelScope.launch {
-            // Пауза, чтобы ребёнок успел увидеть, что «робот думает».
+            // Пауза, чтобы ребёнок успел увидеть, что соперник думает.
             delay(600L + random.nextLong(400L))
             val board = ui.board
-            val state2 = Rules.state(board)
-            if (state2 is GameState.Playing && state2.turn == AI_SIDE) {
+            val now = Rules.state(board)
+            if (now is GameState.Playing && now.turn == AI_SIDE) {
                 val move = aiFor(ui.difficulty, random).chooseMove(board, AI_SIDE)
                 update(ui.copy(aiThinking = false))
                 makeMove(move, AI_SIDE)
             } else {
                 update(ui.copy(aiThinking = false))
             }
-        }
-    }
-
-    /** Сначала проговариваем слово кнопки, потом — чей ход: фразы не перебивают друг друга. */
-    private fun announceAfter(phrase: String) {
-        audio.say(phrase, force = true)
-        viewModelScope.launch {
-            delay(1000)
-            announceBanner(force = true)
         }
     }
 
@@ -229,10 +240,10 @@ class GameViewModel(
         handle[KEY_STATE] = listOf(
             state.screen.name,
             state.mode.name,
-            state.difficulty.name,
+            state.opponent.name,
             state.board.code(),
-            state.scoreMurka.toString(),
-            state.scoreKrya.toString(),
+            state.scoreHero.toString(),
+            state.scoreOpponent.toString(),
             if (state.soundOn) "1" else "0",
             state.roundSeed.toString(),
         ).joinToString("|")
@@ -245,10 +256,10 @@ class GameViewModel(
             UiState(
                 screen = Screen.valueOf(parts[0]),
                 mode = GameMode.valueOf(parts[1]),
-                difficulty = Difficulty.valueOf(parts[2]),
+                opponent = Cast.valueOf(parts[2]),
                 board = Board.of(parts[3]),
-                scoreMurka = parts[4].toInt(),
-                scoreKrya = parts[5].toInt(),
+                scoreHero = parts[4].toInt(),
+                scoreOpponent = parts[5].toInt(),
                 soundOn = parts[6] == "1",
                 roundSeed = parts[7].toInt(),
             )
@@ -262,8 +273,8 @@ class GameViewModel(
     }
 
     companion object {
-        /** За компьютер всегда играет Кря: ребёнок — Мурка и ходит первым. */
-        val AI_SIDE: Player = Player.KRYA
+        /** Кира ходит первой, компьютер всегда играет вторым. */
+        val AI_SIDE: Side = Side.SECOND
 
         const val ERASE_MILLIS = 620L
         const val MAX_SCORE = 9

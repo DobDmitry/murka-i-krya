@@ -1,4 +1,4 @@
-package murka.core
+package kira.core
 
 /** Чем закончится позиция, если дальше обе стороны играют идеально. */
 enum class Outcome { WIN, DRAW, LOSS }
@@ -7,7 +7,7 @@ object PerfectPlay {
 
     private val cache = HashMap<String, Outcome>()
 
-    fun outcome(board: Board, forPlayer: Player): Outcome {
+    fun outcome(board: Board, forPlayer: Side): Outcome {
         val key = board.code() + forPlayer.name
         cache[key]?.let { return it }
         val result = when (val state = Rules.state(board)) {

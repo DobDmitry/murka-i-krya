@@ -26,9 +26,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.dobdmitry.murkakrya.UiState
-import murka.core.GameMode
-import murka.core.GameState
-import murka.core.Player
+import kira.core.GameMode
+import kira.core.GameState
+import kira.core.Side
 
 /**
  * Игровой экран: счёт, чей ход, поле во весь экран и одна большая кнопка «ЕЩЁ РАЗ».
@@ -50,7 +50,7 @@ fun GameScreen(
 
     val playing = ui.state as? GameState.Playing
     val humanTurn = playing != null &&
-        (ui.mode == GameMode.TWO_PLAYERS || playing.turn == Player.MURKA)
+        (ui.mode == GameMode.TWO_PLAYERS || playing.turn == Side.FIRST)
     val boardEnabled = humanTurn && !ui.erasing && !ui.aiThinking
 
     Box(Modifier.fillMaxSize()) {
@@ -70,6 +70,8 @@ fun GameScreen(
 
             BoardView(
                 board = ui.board,
+                heroCast = ui.hero,
+                opponentCast = ui.opponent,
                 winLine = ui.winLine,
                 winner = ui.winner,
                 eraseProgress = eraseProgress,
@@ -115,19 +117,19 @@ private fun ScoreBoard(ui: UiState) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        ScorePanel(Player.MURKA, ui.scoreMurka)
-        ScorePanel(Player.KRYA, ui.scoreKrya)
+        ScorePanel(ui.hero, ui.scoreHero)
+        ScorePanel(ui.opponent, ui.scoreOpponent)
     }
 }
 
 @Composable
-private fun ScorePanel(player: Player, score: Int) {
+private fun ScorePanel(character: Cast, score: Int) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        CharacterIcon(player, Modifier.size(42.dp))
+        CharacterIcon(character, Modifier.size(42.dp))
         Spacer(Modifier.width(4.dp))
         StarRow(
             count = score,
-            color = Palette.of(player),
+            color = Palette.of(character),
             modifier = Modifier
                 .width(92.dp)
                 .height(20.dp),
@@ -136,7 +138,7 @@ private fun ScorePanel(player: Player, score: Int) {
         Text(
             text = score.toString(),
             style = MaterialTheme.typography.displayMedium,
-            color = Palette.darkOf(player),
+            color = Palette.darkOf(character),
         )
     }
 }
@@ -148,14 +150,14 @@ private fun ScorePanel(player: Player, score: Int) {
 @Composable
 private fun Banner(ui: UiState) {
     val draw = ui.isDraw
-    val winner = ui.winner
-    val turn = (ui.state as? GameState.Playing)?.turn
+    val winnerSide = ui.winnerSide
+    val turn = ui.turn
 
-    val murkaActive = winner == Player.MURKA || turn == Player.MURKA || draw
-    val kryaActive = winner == Player.KRYA || turn == Player.KRYA || draw
+    val heroActive = winnerSide == Side.FIRST || turn == Side.FIRST || draw
+    val opponentActive = winnerSide == Side.SECOND || turn == Side.SECOND || draw
 
-    val murkaPulse = rememberPulse(active = turn == Player.MURKA || winner == Player.MURKA)
-    val kryaPulse = rememberPulse(active = turn == Player.KRYA || winner == Player.KRYA)
+    val heroPulse = rememberPulse(active = turn == Side.FIRST || winnerSide == Side.FIRST)
+    val opponentPulse = rememberPulse(active = turn == Side.SECOND || winnerSide == Side.SECOND)
 
     val hug by animateDpAsState(
         targetValue = if (draw) 18.dp else 0.dp,
@@ -175,9 +177,7 @@ private fun Banner(ui: UiState) {
         contentAlignment = Alignment.Center,
     ) {
         if (draw) {
-            Canvas(Modifier.fillMaxSize()) {
-                drawHearts(progress = 1f)
-            }
+            Canvas(Modifier.fillMaxSize()) { drawHearts(progress = 1f) }
         }
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -185,37 +185,33 @@ private fun Banner(ui: UiState) {
             modifier = Modifier.fillMaxWidth(),
         ) {
             LivingCharacter(
-                player = Player.MURKA,
-                dimmed = !murkaActive,
-                extraScale = 1f + murkaPulse * 0.10f,
+                character = ui.hero,
+                dimmed = !heroActive,
+                extraScale = 1f + heroPulse * 0.10f,
                 rotationDegrees = tilt,
                 seed = 0,
                 modifier = Modifier
-                    .size(if (winner == Player.MURKA) 92.dp else 76.dp)
+                    .size(if (winnerSide == Side.FIRST) 92.dp else 76.dp)
                     .offset(x = hug),
             )
             SpokenLabel(
                 phrase = ui.banner,
-                style = if (winner != null) MaterialTheme.typography.headlineLarge
+                style = if (winnerSide != null) MaterialTheme.typography.headlineLarge
                 else MaterialTheme.typography.headlineMedium,
-                color = when {
-                    winner != null -> Palette.darkOf(winner)
-                    draw -> Palette.Ink
-                    else -> Palette.Ink
-                },
+                color = ui.winner?.darkColor ?: Palette.Ink,
                 speak = false,
                 modifier = Modifier
                     .weight(1f)
                     .padding(horizontal = 4.dp),
             )
             LivingCharacter(
-                player = Player.KRYA,
-                dimmed = !kryaActive,
-                extraScale = 1f + kryaPulse * 0.10f,
+                character = ui.opponent,
+                dimmed = !opponentActive,
+                extraScale = 1f + opponentPulse * 0.10f,
                 rotationDegrees = -tilt,
                 seed = 2,
                 modifier = Modifier
-                    .size(if (winner == Player.KRYA) 92.dp else 76.dp)
+                    .size(if (winnerSide == Side.SECOND) 92.dp else 76.dp)
                     .offset(x = -hug),
             )
         }

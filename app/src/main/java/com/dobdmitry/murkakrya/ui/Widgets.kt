@@ -19,7 +19,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -238,4 +240,72 @@ fun DrawScope.drawWarmBackground() {
         radius = size.minDimension * 0.75f,
         center = Offset(size.width / 2f, size.height * 0.42f),
     )
+}
+
+/**
+ * Кнопка с персонажем: большая картинка, под ней имя,
+ * а у компьютерных соперников — ещё и звёздочки силы.
+ * Имя проговаривается при нажатии: ребёнок связывает слово со звуком.
+ */
+@Composable
+fun CharacterButton(
+    character: Cast,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    iconSize: Dp = 96.dp,
+    showStrength: Boolean = false,
+) {
+    var pressed by remember { mutableStateOf(false) }
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) 0.90f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+        label = "выбор героя",
+    )
+    val speaker = LocalSpeaker.current
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+        modifier = modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .background(color = Palette.Cream, shape = RoundedCornerShape(26.dp))
+            .padding(horizontal = 10.dp, vertical = 10.dp)
+            .pointerInput(character) {
+                detectTapGestures(
+                    onPress = {
+                        pressed = true
+                        tryAwaitRelease()
+                        pressed = false
+                    },
+                    onTap = {
+                        speaker(character.speech)
+                        onClick()
+                    },
+                )
+            },
+    ) {
+        LivingCharacter(
+            character = character,
+            modifier = Modifier.size(iconSize),
+            seed = character.ordinal % 3,
+        )
+        Text(
+            text = character.display,
+            style = MaterialTheme.typography.titleLarge,
+            color = character.darkColor,
+            maxLines = 1,
+            textAlign = TextAlign.Center,
+        )
+        if (showStrength) {
+            StrengthStars(
+                count = character.strength,
+                modifier = Modifier
+                    .width(62.dp)
+                    .height(18.dp),
+            )
+        }
+    }
 }

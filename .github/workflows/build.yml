@@ -48,7 +48,7 @@ jobs:
           }
 
       - name: Назвать APK по номеру сборки
-        run: cp app/build/outputs/apk/debug/app-debug.apk murka-i-krya-${{ github.run_number }}.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk kira-${{ github.run_number }}.apk
 
       - name: Отчёт тестов, если что-то упало
         if: failure()
@@ -62,9 +62,9 @@ jobs:
         with:
           tag_name: build-${{ github.run_number }}
           name: Сборка ${{ github.run_number }}
-          files: murka-i-krya-${{ github.run_number }}.apk
+          files: kira-${{ github.run_number }}.apk
           body: |
-            Игра «МУРКА и КРЯ», сборка ${{ github.run_number }}.
+            Игра «КИРА», сборка ${{ github.run_number }}.
 
-            Скачайте файл `murka-i-krya-${{ github.run_number }}.apk` ниже и откройте его на телефоне.
+            Скачайте файл `kira-${{ github.run_number }}.apk` ниже и откройте его на телефоне.
             Если Android спросит разрешение на установку из этого источника — разрешите.

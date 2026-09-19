@@ -20,32 +20,52 @@ object Palette {
     val BackgroundDeep = Color(0xFFFFE6C4)
     val Ink = Color(0xFF5B4436)
     val Pencil = Color(0xFF8A6647)
-
-    val Murka = Color(0xFFF2994A)
-    val MurkaDark = Color(0xFFB9682A)
-    val Krya = Color(0xFFF2C14E)
-    val KryaDark = Color(0xFFA9781A)
-
-    val Pink = Color(0xFFEE7FA0)
-    val Sky = Color(0xFF63B4E8)
-    val Mint = Color(0xFF6FCF97)
-    val Lilac = Color(0xFFA98CE8)
     val Cream = Color(0xFFFFFBF2)
 
+    // Люди
+    val Skin = Color(0xFFFFD6B0)
+    val SkinWarm = Color(0xFFF7C79B)
+    val KiraHair = Color(0xFF8A5A34)
+    val MamaHair = Color(0xFF5C3A22)
+    val PapaHair = Color(0xFF4A3524)
+
+    val Pink = Color(0xFFEE7FA0)
+    val PinkDark = Color(0xFFC0506F)
+    val Lilac = Color(0xFFA98CE8)
+    val LilacDark = Color(0xFF7659B5)
+    val Sky = Color(0xFF63B4E8)
+    val SkyDark = Color(0xFF3A7FAE)
+
+    // Звери
+    val Krya = Color(0xFFF2C14E)
+    val KryaDark = Color(0xFFA9781A)
+    val Beak = Color(0xFFF2994A)
+    val BeakDark = Color(0xFFB9682A)
+    val Hedgehog = Color(0xFFD8B48C)
+    val HedgehogDark = Color(0xFF6E5540)
+    val Fox = Color(0xFFE8833A)
+    val FoxDark = Color(0xFFA9531C)
+    val Bear = Color(0xFFB08464)
+    val BearDark = Color(0xFF7A5539)
+    val Wolf = Color(0xFF9AA7B4)
+    val WolfDark = Color(0xFF5E6B78)
+    val Lion = Color(0xFFF0B429)
+    val LionMane = Color(0xFFC9821F)
+
+    val Mint = Color(0xFF6FCF97)
+
     /** Цвета конфетти и звёздочек. */
-    val Confetti = listOf(Pink, Sky, Mint, Lilac, Murka, Krya)
+    val Confetti = listOf(Pink, Sky, Mint, Lilac, Krya, Fox)
 
-    fun of(player: murka.core.Player): Color =
-        if (player == murka.core.Player.MURKA) Murka else Krya
+    fun of(character: Cast): Color = character.color
 
-    fun darkOf(player: murka.core.Player): Color =
-        if (player == murka.core.Player.MURKA) MurkaDark else KryaDark
+    fun darkOf(character: Cast): Color = character.darkColor
 }
 
 private val ColorScheme = lightColorScheme(
-    primary = Palette.Murka,
+    primary = Palette.Pink,
     onPrimary = Palette.Cream,
-    secondary = Palette.Krya,
+    secondary = Palette.Sky,
     onSecondary = Palette.Ink,
     background = Palette.Background,
     onBackground = Palette.Ink,
@@ -76,7 +96,7 @@ private val BigTypography = Typography(
 )
 
 @Composable
-fun MurkaTheme(content: @Composable () -> Unit) {
+fun GameTheme(content: @Composable () -> Unit) {
     MaterialTheme(
         colorScheme = ColorScheme,
         typography = BigTypography,
