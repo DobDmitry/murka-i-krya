@@ -1,0 +1,61 @@
+name: Сборка APK
+
+# APK собирается при каждом пуше в main и по кнопке «Run workflow».
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Debug APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Забрать код
+        uses: actions/checkout@v4
+
+      - name: Поставить JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Подготовить Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Разрешить запуск gradlew
+        run: chmod +x ./gradlew
+
+      - name: Тесты игровой логики
+        run: ./gradlew :core:test --no-daemon --stacktrace
+
+      - name: Собрать debug APK
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: ./gradlew :app:assembleDebug --no-daemon --stacktrace
+
+      - name: Назвать APK по номеру сборки
+        run: cp app/build/outputs/apk/debug/app-debug.apk murka-i-krya-${{ github.run_number }}.apk
+
+      - name: Отчёт тестов, если что-то упало
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report-${{ github.run_number }}
+          path: core/build/reports/tests/test
+
+      - name: Выложить APK в Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: Сборка ${{ github.run_number }}
+          files: murka-i-krya-${{ github.run_number }}.apk
+          body: |
+            Игра «МУРКА и КРЯ», сборка ${{ github.run_number }}.
+
+            Скачайте файл `murka-i-krya-${{ github.run_number }}.apk` ниже и откройте его на телефоне.
+            Если Android спросит разрешение на установку из этого источника — разрешите.
