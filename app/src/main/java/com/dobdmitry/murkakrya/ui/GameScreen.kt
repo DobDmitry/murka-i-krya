@@ -76,12 +76,14 @@ fun GameScreen(
                 enabled = boardEnabled,
                 roundSeed = ui.roundSeed,
                 onCellTap = onCellTap,
+                // fill = false: на невысоком экране поле уменьшится, но не обрежется.
                 modifier = Modifier
+                    .weight(1f, fill = false)
                     .fillMaxWidth()
                     .padding(top = 4.dp),
             )
 
-            Spacer(Modifier.weight(1f))
+            Spacer(Modifier.height(10.dp))
 
             BigButton(
                 phrase = Phrases.AGAIN,

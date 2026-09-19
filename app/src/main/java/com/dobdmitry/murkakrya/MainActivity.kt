@@ -4,16 +4,12 @@ import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.Modifier
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dobdmitry.murkakrya.ui.GameScreen
 import com.dobdmitry.murkakrya.ui.LocalSpeaker
 import com.dobdmitry.murkakrya.ui.MurkaTheme
-import com.dobdmitry.murkakrya.ui.Palette
 import com.dobdmitry.murkakrya.ui.StartScreen
 
 /**

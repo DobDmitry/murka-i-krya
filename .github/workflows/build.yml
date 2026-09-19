@@ -31,12 +31,21 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Тесты игровой логики
-        run: ./gradlew :core:test --no-daemon --stacktrace
+        run: ./gradlew :core:test --no-daemon
 
+      # Ошибки компиляции печатаем ещё раз в самом конце шага:
+      # иначе они тонут в длинном стектрейсе Gradle.
       - name: Собрать debug APK
         env:
           BUILD_NUMBER: ${{ github.run_number }}
-        run: ./gradlew :app:assembleDebug --no-daemon --stacktrace
+        run: |
+          set -o pipefail
+          ./gradlew :app:assembleDebug --no-daemon 2>&1 | tee build.log || {
+            echo "::group::Ошибки компиляции"
+            grep -E "^e: |^w: " build.log | head -80
+            echo "::endgroup::"
+            exit 1
+          }
 
       - name: Назвать APK по номеру сборки
         run: cp app/build/outputs/apk/debug/app-debug.apk murka-i-krya-${{ github.run_number }}.apk
