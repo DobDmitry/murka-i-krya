@@ -49,7 +49,8 @@
 core/   чистый Kotlin без Android: правила, состояния, три уровня ИИ
         + unit-тесты (8 линий победы, ничья, минимакс, статистика лёгкого уровня)
 app/    Jetpack Compose: экраны, персонажи, анимации, звук
-tools/  генератор звуков (make_sounds.py)
+art/    исходные картинки лиц (Кира, мама, папа)
+tools/  генератор звуков (make_sounds.py) и подготовка лиц (make_faces.py)
 ```
 
 Ядро не знает имён героев: там только «первый» и «второй» игрок
@@ -84,13 +85,26 @@ APK собирает GitHub Actions при каждом пуше в `main` и п
 в победной надписи и в озвучке. Новый соперник добавляется строкой в таблицу
 и одной рисующей функцией.
 
-**Внешность** — `ui/Characters.kt`: `drawKira`, `drawMama`, `drawPapa`,
-`drawKrya`, `drawHedgehog`, `drawFox`, `drawBear`, `drawWolf`, `drawLion`.
-Это обычное рисование фигурами: круги, треугольники, дуги.
+**Лица людей** — картинки. Исходники лежат в `art/kira-source.jpg`,
+`art/mama-source.jpg`, `art/papa-source.jpg`. Положите вместо них свои
+(лицо на ровном однотонном фоне) и запустите:
+
+```
+python3 tools/make_faces.py
+```
+
+Скрипт сам уберёт фон, обрежет по лицу, сделает PNG с прозрачностью
+в `app/src/main/res/drawable-nodpi/` и заодно пересоберёт иконку приложения
+из лица Киры.
+
+**Внешность зверей** — `ui/Characters.kt`: `drawKrya`, `drawHedgehog`,
+`drawFox`, `drawBear`, `drawWolf`, `drawLion`. Это рисование фигурами:
+круги, треугольники, дуги. Там же лежат запасные векторные лица людей
+(`drawKira`, `drawMama`, `drawPapa`) — они рисуются, если картинок нет.
 
 **Цвета** — `ui/Theme.kt`, объект `Palette`.
 
-**Иконка приложения** — `app/src/main/res/drawable/ic_launcher_foreground.xml`.
+**Иконка приложения** — собирается из лица Киры скриптом `make_faces.py`.
 **Подпись под иконкой** — `app/src/main/res/values/strings.xml`.
 
 **Звуки** — `tools/make_sounds.py`. Каждый звук считается математикой,

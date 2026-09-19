@@ -14,15 +14,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.min
+import kotlin.math.roundToInt
 import kotlin.math.sin
 
 /**
@@ -401,6 +406,23 @@ fun DrawScope.drawLion(center: Offset, radius: Float, blink: Float = 1f, alpha: 
     }
 }
 
+/** Лицо-картинка: люди нарисованы заранее, поэтому просто кладём картинку в круг. */
+fun DrawScope.drawFaceImage(image: ImageBitmap, center: Offset, radius: Float, alpha: Float = 1f) {
+    val side = radius * 2.30f
+    drawImage(
+        image = image,
+        srcOffset = IntOffset.Zero,
+        srcSize = IntSize(image.width, image.height),
+        dstOffset = IntOffset(
+            (center.x - side / 2f).roundToInt(),
+            (center.y - side / 2f).roundToInt(),
+        ),
+        dstSize = IntSize(side.roundToInt(), side.roundToInt()),
+        alpha = alpha,
+        filterQuality = FilterQuality.High,
+    )
+}
+
 // --- Общая точка входа ------------------------------------------------------
 
 fun DrawScope.drawCharacter(
@@ -409,7 +431,12 @@ fun DrawScope.drawCharacter(
     radius: Float,
     blink: Float = 1f,
     alpha: Float = 1f,
+    image: ImageBitmap? = null,
 ) {
+    if (image != null) {
+        drawFaceImage(image, center, radius, alpha)
+        return
+    }
     when (character) {
         Cast.KIRA -> drawKira(center, radius, blink, alpha)
         Cast.MAMA -> drawMama(center, radius, blink, alpha)
@@ -459,6 +486,8 @@ fun LivingCharacter(
         label = "моргание",
     )
 
+    val image = LocalCastImages.current[character]
+
     Canvas(modifier = modifier) {
         val radius = min(size.width, size.height) / 2f * 0.66f
         val center = Offset(size.width / 2f, size.height / 2f + radius * 0.10f)
@@ -469,7 +498,7 @@ fun LivingCharacter(
                 scaleY = (1f + breathe * 0.05f) * extraScale,
                 pivot = center,
             ) {
-                drawCharacter(character, center, radius, blink, alpha)
+                drawCharacter(character, center, radius, blink, alpha, image)
             }
         }
     }
@@ -478,10 +507,11 @@ fun LivingCharacter(
 /** Плоская иконка персонажа без анимации — для счёта и кнопок. */
 @Composable
 fun CharacterIcon(character: Cast, modifier: Modifier = Modifier, dimmed: Boolean = false) {
+    val image = LocalCastImages.current[character]
     Canvas(modifier = modifier) {
         val radius = min(size.width, size.height) / 2f * 0.64f
         val center = Offset(size.width / 2f, size.height / 2f + radius * 0.12f)
-        drawCharacter(character, center, radius, alpha = if (dimmed) 0.30f else 1f)
+        drawCharacter(character, center, radius, alpha = if (dimmed) 0.30f else 1f, image = image)
     }
 }
 

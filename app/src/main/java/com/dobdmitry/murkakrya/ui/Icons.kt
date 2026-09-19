@@ -173,17 +173,34 @@ fun IconCanvas(modifier: Modifier = Modifier, draw: DrawScope.(Offset, Float) ->
 /** Значок раздела «играем вдвоём»: два лица рядом. */
 @Composable
 fun PeopleBadge(modifier: Modifier = Modifier) {
+    val images = LocalCastImages.current
     IconCanvas(modifier) { center, radius ->
-        drawKira(Offset(center.x - radius * 0.46f, center.y + radius * 0.10f), radius * 0.44f)
-        drawPapa(Offset(center.x + radius * 0.50f, center.y + radius * 0.14f), radius * 0.44f)
+        drawCharacter(
+            character = Cast.KIRA,
+            center = Offset(center.x - radius * 0.46f, center.y + radius * 0.10f),
+            radius = radius * 0.44f,
+            image = images[Cast.KIRA],
+        )
+        drawCharacter(
+            character = Cast.PAPA,
+            center = Offset(center.x + radius * 0.50f, center.y + radius * 0.14f),
+            radius = radius * 0.44f,
+            image = images[Cast.PAPA],
+        )
     }
 }
 
 /** Значок раздела «играем с компьютером»: лицо и робот. */
 @Composable
 fun RobotBadge(modifier: Modifier = Modifier) {
+    val images = LocalCastImages.current
     IconCanvas(modifier) { center, radius ->
-        drawKira(Offset(center.x - radius * 0.48f, center.y + radius * 0.12f), radius * 0.44f)
+        drawCharacter(
+            character = Cast.KIRA,
+            center = Offset(center.x - radius * 0.48f, center.y + radius * 0.12f),
+            radius = radius * 0.44f,
+            image = images[Cast.KIRA],
+        )
         drawRobot(Offset(center.x + radius * 0.52f, center.y + radius * 0.16f), radius * 0.44f)
     }
 }

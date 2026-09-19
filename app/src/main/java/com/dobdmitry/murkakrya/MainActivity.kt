@@ -8,7 +8,9 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dobdmitry.murkakrya.ui.GameScreen
+import com.dobdmitry.murkakrya.ui.LocalCastImages
 import com.dobdmitry.murkakrya.ui.LocalSpeaker
+import com.dobdmitry.murkakrya.ui.rememberCastImages
 import com.dobdmitry.murkakrya.ui.GameTheme
 import com.dobdmitry.murkakrya.ui.StartScreen
 
@@ -31,7 +33,10 @@ class MainActivity : ComponentActivity() {
                 // Кнопка «назад» игру не закрывает. Выход — только долгим нажатием на домик.
                 BackHandler(enabled = true) { model.blup() }
 
-                CompositionLocalProvider(LocalSpeaker provides { phrase -> model.say(phrase) }) {
+                CompositionLocalProvider(
+                    LocalSpeaker provides { phrase -> model.say(phrase) },
+                    LocalCastImages provides rememberCastImages(),
+                ) {
                     when (ui.screen) {
                         Screen.START -> StartScreen(
                             soundOn = ui.soundOn,
