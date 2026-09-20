@@ -52,6 +52,7 @@ class MainActivity : ComponentActivity() {
                             onAgain = model::newRound,
                             onHome = model::goHome,
                             onToggleSound = model::toggleSound,
+                            onResetScore = model::resetScore,
                         )
                     }
                 }

@@ -423,6 +423,45 @@ fun DrawScope.drawFaceImage(image: ImageBitmap, center: Offset, radius: Float, a
     )
 }
 
+/**
+ * Закрытые глаза для лиц-картинок: перекрываем зрачок цветом кожи и рисуем
+ * дугу-ресничку. Моргание короткое (около 120 мс), поэтому закрываем глаза
+ * целиком, без промежуточных кадров — так выходит аккуратная улыбка глазами.
+ */
+fun DrawScope.drawEyelids(
+    eyes: EyeSpots,
+    center: Offset,
+    radius: Float,
+    alpha: Float = 1f,
+) {
+    val side = radius * 2.30f
+    val left = center.x - side / 2f
+    val top = center.y - side / 2f
+    val halfWidth = maxOf(eyes.width, 0.055f) * side * 0.75f
+    val halfHeight = maxOf(eyes.height, 0.055f) * side * 0.72f
+    val lid = eyes.skin.copy(alpha = alpha)
+    val lash = Palette.Ink.copy(alpha = alpha)
+
+    for (spot in listOf(eyes.leftX to eyes.leftY, eyes.rightX to eyes.rightY)) {
+        val cx = left + spot.first * side
+        val cy = top + spot.second * side
+        drawOval(
+            color = lid,
+            topLeft = Offset(cx - halfWidth * 1.25f, cy - halfHeight * 1.45f),
+            size = Size(halfWidth * 2.5f, halfHeight * 2.6f),
+        )
+        drawArc(
+            color = lash,
+            startAngle = 200f,
+            sweepAngle = 140f,
+            useCenter = false,
+            topLeft = Offset(cx - halfWidth, cy - halfHeight * 0.9f),
+            size = Size(halfWidth * 2f, halfHeight * 2f),
+            style = Stroke(width = side * 0.012f, cap = StrokeCap.Round),
+        )
+    }
+}
+
 // --- Общая точка входа ------------------------------------------------------
 
 fun DrawScope.drawCharacter(
@@ -435,6 +474,8 @@ fun DrawScope.drawCharacter(
 ) {
     if (image != null) {
         drawFaceImage(image, center, radius, alpha)
+        val eyes = character.eyes
+        if (eyes != null && blink < 0.45f) drawEyelids(eyes, center, radius, alpha)
         return
     }
     when (character) {
@@ -450,7 +491,22 @@ fun DrawScope.drawCharacter(
     }
 }
 
-/** Персонаж, который живёт сам по себе: дышит и моргает. */
+/** Настроение персонажа: от него зависит, как он себя ведёт. */
+enum class Mood {
+    /** Ждёт своей очереди: просто дышит и моргает. */
+    IDLE,
+
+    /** Его ход: подпрыгивает на месте, чтобы ребёнок видел, кого ждут. */
+    ACTIVE,
+
+    /** Выиграл: прыгает высоко и весело. */
+    WINNER,
+
+    /** Проиграл: вздыхает и качает головой — но не грустно. */
+    LOSER,
+}
+
+/** Персонаж, который живёт сам по себе: дышит, моргает и реагирует на игру. */
 @Composable
 fun LivingCharacter(
     character: Cast,
@@ -458,6 +514,7 @@ fun LivingCharacter(
     dimmed: Boolean = false,
     extraScale: Float = 1f,
     rotationDegrees: Float = 0f,
+    mood: Mood = Mood.IDLE,
     seed: Int = 0,
 ) {
     val transition = rememberInfiniteTransition(label = "жизнь")
@@ -486,13 +543,46 @@ fun LivingCharacter(
         label = "моргание",
     )
 
+    // Прыжки и вздохи: свой ритм на каждое настроение.
+    val beat by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(
+                durationMillis = when (mood) {
+                    Mood.WINNER -> 340
+                    Mood.ACTIVE -> 620
+                    Mood.LOSER -> 1500
+                    Mood.IDLE -> 2000
+                },
+                easing = FastOutSlowInEasing,
+            ),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "настроение",
+    )
+
     val image = LocalCastImages.current[character]
 
     Canvas(modifier = modifier) {
         val radius = min(size.width, size.height) / 2f * 0.66f
-        val center = Offset(size.width / 2f, size.height / 2f + radius * 0.10f)
+        val base = Offset(size.width / 2f, size.height / 2f + radius * 0.10f)
         val alpha = if (dimmed) 0.32f else 1f
-        rotate(rotationDegrees, pivot = center) {
+
+        val lift = when (mood) {
+            Mood.WINNER -> -beat * radius * 0.30f
+            Mood.ACTIVE -> -beat * radius * 0.12f
+            Mood.LOSER -> beat * radius * 0.06f
+            Mood.IDLE -> 0f
+        }
+        val sway = when (mood) {
+            Mood.WINNER -> (beat - 0.5f) * 10f
+            Mood.LOSER -> (beat - 0.5f) * 12f
+            else -> 0f
+        }
+        val center = Offset(base.x, base.y + lift)
+
+        rotate(rotationDegrees + sway, pivot = center) {
             scale(
                 scaleX = (1f + breathe * 0.04f) * extraScale,
                 scaleY = (1f + breathe * 0.05f) * extraScale,

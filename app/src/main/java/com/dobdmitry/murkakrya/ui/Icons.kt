@@ -261,3 +261,55 @@ fun DrawScope.drawHearts(progress: Float) {
         )
     }
 }
+
+/** Кубок за три победы подряд. */
+fun DrawScope.drawTrophy(center: Offset, radius: Float) {
+    val gold = Palette.Krya
+    val dark = Palette.KryaDark
+
+    // Ручки
+    for (side in listOf(-1f, 1f)) {
+        drawArc(
+            color = dark,
+            startAngle = if (side < 0) 90f else 270f,
+            sweepAngle = 180f,
+            useCenter = false,
+            topLeft = Offset(center.x + side * radius * 0.86f - radius * 0.26f, center.y - radius * 0.78f),
+            size = Size(radius * 0.52f, radius * 0.84f),
+            style = Stroke(width = radius * 0.16f, cap = StrokeCap.Round),
+        )
+    }
+    // Чаша
+    val bowl = Path().apply {
+        moveTo(center.x - radius * 0.62f, center.y - radius * 0.86f)
+        lineTo(center.x + radius * 0.62f, center.y - radius * 0.86f)
+        lineTo(center.x + radius * 0.44f, center.y + radius * 0.10f)
+        cubicTo(
+            center.x + radius * 0.30f, center.y + radius * 0.34f,
+            center.x - radius * 0.30f, center.y + radius * 0.34f,
+            center.x - radius * 0.44f, center.y + radius * 0.10f,
+        )
+        close()
+    }
+    drawPath(bowl, gold)
+    drawPath(bowl, dark, style = Stroke(width = radius * 0.10f))
+    // Ножка и подставка
+    drawRect(
+        color = gold,
+        topLeft = Offset(center.x - radius * 0.14f, center.y + radius * 0.26f),
+        size = Size(radius * 0.28f, radius * 0.36f),
+    )
+    drawRoundRect(
+        color = dark,
+        topLeft = Offset(center.x - radius * 0.52f, center.y + radius * 0.58f),
+        size = Size(radius * 1.04f, radius * 0.26f),
+        cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius * 0.10f),
+    )
+    // Звезда на чаше
+    drawStar(Offset(center.x, center.y - radius * 0.34f), radius * 0.26f, Palette.Cream)
+}
+
+@Composable
+fun TrophyIcon(modifier: Modifier = Modifier) {
+    IconCanvas(modifier) { center, radius -> drawTrophy(center, radius * 0.9f) }
+}

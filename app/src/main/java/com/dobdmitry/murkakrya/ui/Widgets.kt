@@ -309,3 +309,56 @@ fun CharacterButton(
         }
     }
 }
+
+/**
+ * Полоса, которая срабатывает только на долгое нажатие.
+ * Так обнуляется счёт: случайно ребёнок это не сделает.
+ */
+@Composable
+fun HoldRow(
+    onHold: () -> Unit,
+    modifier: Modifier = Modifier,
+    holdMillis: Int = 1500,
+    content: @Composable () -> Unit,
+) {
+    val progress = remember { Animatable(0f) }
+    var holding by remember { mutableStateOf(false) }
+
+    LaunchedEffect(holding) {
+        if (holding) {
+            progress.animateTo(1f, tween(durationMillis = holdMillis, easing = LinearEasing))
+            if (progress.value >= 1f) {
+                holding = false
+                progress.snapTo(0f)
+                onHold()
+            }
+        } else {
+            progress.animateTo(0f, tween(durationMillis = 200))
+        }
+    }
+
+    Box(
+        modifier = modifier.pointerInput(Unit) {
+            detectTapGestures(
+                onPress = {
+                    holding = true
+                    tryAwaitRelease()
+                    holding = false
+                }
+            )
+        }
+    ) {
+        content()
+        if (progress.value > 0f) {
+            Canvas(Modifier.fillMaxSize()) {
+                val height = size.height * 0.06f
+                drawRoundRect(
+                    color = Palette.Pink.copy(alpha = 0.8f),
+                    topLeft = Offset(0f, size.height - height),
+                    size = Size(size.width * progress.value, height),
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(height / 2f),
+                )
+            }
+        }
+    }
+}

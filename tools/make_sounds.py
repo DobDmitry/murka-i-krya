@@ -158,16 +158,18 @@ def erase():
     return soften(noise(0.42, amplitude=0.5, smooth=26, curve=2.2), window=5)
 
 
+# Громкость каждого звука подобрана на слух: касания тихие, потому что
+# их будет пятьдесят подряд, победа — самая заметная.
 SOUNDS = {
-    "blup": blup,
-    "place": place,
-    "win": win,
-    "draw": draw_sound,
-    "star": star,
-    "erase": erase,
+    "blup": (blup, 0.42),
+    "place": (place, 0.50),
+    "win": (win, 0.62),
+    "draw": (draw_sound, 0.52),
+    "star": (star, 0.46),
+    "erase": (erase, 0.40),
 }
 
 if __name__ == "__main__":
-    for name, maker in SOUNDS.items():
-        save(name, maker())
+    for name, (maker, peak) in SOUNDS.items():
+        save(name, maker(), peak=peak)
     print("Готово:", OUT_DIR)

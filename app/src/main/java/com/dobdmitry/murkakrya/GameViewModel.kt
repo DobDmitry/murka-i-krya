@@ -40,6 +40,8 @@ data class UiState(
     val roundSeed: Int = 1,
     val erasing: Boolean = false,
     val aiThinking: Boolean = false,
+    val streak: Int = 0,
+    val celebrate: Boolean = false,
 ) {
     val hero: Cast get() = Cast.HERO
 
@@ -78,8 +80,10 @@ class GameViewModel(
 ) : AndroidViewModel(application) {
 
     private val audio = GameAudio(application)
+    private val scores = ScoreStore(application)
     private val random = Random(System.currentTimeMillis())
     private var aiJob: Job? = null
+    private var celebrationJob: Job? = null
 
     var ui by mutableStateOf(restore())
         private set
@@ -99,6 +103,7 @@ class GameViewModel(
 
     private fun startGame(mode: GameMode, opponent: Cast) {
         aiJob?.cancel()
+        celebrationJob?.cancel()
         audio.play(GameAudio.Sfx.BLUP)
         update(
             ui.copy(
@@ -106,8 +111,11 @@ class GameViewModel(
                 mode = mode,
                 opponent = opponent,
                 board = Board.empty(),
-                scoreHero = 0,
-                scoreOpponent = 0,
+                // Счёт с этим соперником помнится с прошлых партий.
+                scoreHero = scores.heroWins(opponent),
+                scoreOpponent = scores.opponentWins(opponent),
+                streak = scores.streak,
+                celebrate = false,
                 erasing = false,
                 aiThinking = false,
                 roundSeed = ui.roundSeed + 1,
@@ -154,6 +162,14 @@ class GameViewModel(
         update(ui.copy(screen = Screen.START, board = Board.empty(), erasing = false, aiThinking = false))
     }
 
+    /** Долгое нажатие на счёт обнуляет его — только с текущим соперником. */
+    fun resetScore() {
+        scores.clear(ui.opponent)
+        scores.streak = 0
+        audio.play(GameAudio.Sfx.ERASE)
+        update(ui.copy(scoreHero = 0, scoreOpponent = 0, streak = 0, celebrate = false))
+    }
+
     fun toggleSound() {
         val on = !ui.soundOn
         audio.enabled = on
@@ -174,13 +190,36 @@ class GameViewModel(
         val board = ui.board.withMove(index, side)
         var next = ui.copy(board = board)
         val state = Rules.state(board)
+        var champion = false
         if (state is GameState.Win) {
             next = when (state.winner) {
-                Side.FIRST -> next.copy(scoreHero = (next.scoreHero + 1).coerceAtMost(MAX_SCORE))
-                Side.SECOND -> next.copy(scoreOpponent = (next.scoreOpponent + 1).coerceAtMost(MAX_SCORE))
+                Side.FIRST -> {
+                    val wins = scores.addHeroWin(ui.opponent)
+                    val streak = scores.streak + 1
+                    scores.streak = streak
+                    champion = streak % CHAMPION_STREAK == 0
+                    next.copy(
+                        scoreHero = wins.coerceAtMost(MAX_SCORE),
+                        streak = streak,
+                        celebrate = champion,
+                    )
+                }
+                Side.SECOND -> {
+                    val wins = scores.addOpponentWin(ui.opponent)
+                    scores.streak = 0
+                    next.copy(scoreOpponent = wins.coerceAtMost(MAX_SCORE), streak = 0)
+                }
             }
         }
         update(next)
+
+        if (champion) {
+            celebrationJob?.cancel()
+            celebrationJob = viewModelScope.launch {
+                delay(CELEBRATION_MILLIS)
+                update(ui.copy(celebrate = false))
+            }
+        }
 
         viewModelScope.launch {
             delay(120)
@@ -199,6 +238,16 @@ class GameViewModel(
                 is GameState.Playing -> Unit
             }
             announceBanner()
+
+            // После результата — живое слово: похвала или поддержка.
+            if (state is GameState.Win) {
+                delay(1500)
+                when {
+                    champion -> audio.say(Phrases.CHAMPION.speech, force = true)
+                    state.winner == Side.FIRST -> audio.say(Phrases.PRAISE.random(random), force = true)
+                    else -> audio.say(Phrases.SUPPORT.random(random), force = true)
+                }
+            }
         }
 
         scheduleAiMoveIfNeeded()
@@ -228,6 +277,12 @@ class GameViewModel(
     }
 
     private fun announceBanner(force: Boolean = false) {
+        val state = ui.state
+        // Иногда вместо «ХОД КИРЫ» голос просто зовёт ходить — так живее.
+        if (state is GameState.Playing && state.turn == Side.FIRST && random.nextDouble() < NUDGE_CHANCE) {
+            audio.say(Phrases.NUDGES.random(random), force = true)
+            return
+        }
         audio.say(ui.banner.speech, force = force)
     }
 
@@ -246,6 +301,7 @@ class GameViewModel(
             state.scoreOpponent.toString(),
             if (state.soundOn) "1" else "0",
             state.roundSeed.toString(),
+            state.streak.toString(),
         ).joinToString("|")
     }
 
@@ -262,12 +318,14 @@ class GameViewModel(
                 scoreOpponent = parts[5].toInt(),
                 soundOn = parts[6] == "1",
                 roundSeed = parts[7].toInt(),
+                streak = parts.getOrNull(8)?.toIntOrNull() ?: 0,
             )
         }.getOrElse { UiState() }
     }
 
     override fun onCleared() {
         aiJob?.cancel()
+        celebrationJob?.cancel()
         audio.release()
         super.onCleared()
     }
@@ -278,6 +336,11 @@ class GameViewModel(
 
         const val ERASE_MILLIS = 620L
         const val MAX_SCORE = 9
+
+        /** Столько побед подряд — и Кира чемпион. */
+        const val CHAMPION_STREAK = 3
+        const val CELEBRATION_MILLIS = 3200L
+        private const val NUDGE_CHANCE = 0.3
         private const val KEY_STATE = "состояние"
     }
 }
