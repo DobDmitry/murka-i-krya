@@ -3,18 +3,18 @@ package com.dobdmitry.murkakrya.ui
 import androidx.compose.ui.graphics.Color
 import kira.core.Difficulty
 
-/** Человек или зверь: люди играют руками, звери — компьютером. */
-enum class Kind { HUMAN, ANIMAL }
+/** Живой соперник сидит рядом, компьютерным управляет игра. */
+enum class Kind { HUMAN, COMPUTER }
 
 /**
  * Все герои игры в одном месте.
  *
- * Хотите другое имя или другого героя — правите только эту таблицу
- * и рисующую функцию в Characters.kt. Слова короткие и заглавными,
- * рядом с каждым всегда стоит его картинка.
+ * Хотите другое имя или нового героя — правите эту таблицу и кладёте
+ * его лицо в art/, а потом запускаете `python3 tools/make_faces.py`.
  *
- * [difficulty] есть только у компьютерных соперников: чем сильнее зверь,
- * тем больше звёздочек под его картинкой.
+ * Слова короткие и заглавными, рядом всегда стоит лицо, поэтому играть
+ * можно и не читая. Все компьютерные соперники играют одинаково легко:
+ * ребёнку 4 лет важно выбрать, с кем играть, а не насколько трудно.
  */
 enum class Cast(
     val display: String,
@@ -23,10 +23,11 @@ enum class Cast(
     val turnSpeech: String,
     val winSpeech: String,
     val kind: Kind,
-    val difficulty: Difficulty?,
     val color: Color,
     val darkColor: Color,
 ) {
+    // --- Семья: играют руками, по очереди на одном телефоне ---------------
+
     KIRA(
         display = "КИРА",
         speech = "Кира",
@@ -34,7 +35,6 @@ enum class Cast(
         turnSpeech = "Ход Киры",
         winSpeech = "Ура! Кира выиграла",
         kind = Kind.HUMAN,
-        difficulty = null,
         color = Palette.Pink,
         darkColor = Palette.PinkDark,
     ),
@@ -45,7 +45,6 @@ enum class Cast(
         turnSpeech = "Ход мамы",
         winSpeech = "Ура! Мама выиграла",
         kind = Kind.HUMAN,
-        difficulty = null,
         color = Palette.Lilac,
         darkColor = Palette.LilacDark,
     ),
@@ -56,85 +55,109 @@ enum class Cast(
         turnSpeech = "Ход папы",
         winSpeech = "Ура! Папа выиграл",
         kind = Kind.HUMAN,
-        difficulty = null,
         color = Palette.Sky,
         darkColor = Palette.SkyDark,
     ),
-    KRYA(
-        display = "КРЯ",
-        speech = "Кря",
-        turnText = "ХОД КРЯ",
-        turnSpeech = "Ход Кря",
-        winSpeech = "Ура! Кря выиграл",
-        kind = Kind.ANIMAL,
-        difficulty = Difficulty.EASY,
-        color = Palette.Krya,
-        darkColor = Palette.KryaDark,
-    ),
-    HEDGEHOG(
-        display = "ЁЖИК",
-        speech = "Ёжик",
-        turnText = "ХОД ЁЖИКА",
-        turnSpeech = "Ход ёжика",
-        winSpeech = "Ура! Ёжик выиграл",
-        kind = Kind.ANIMAL,
-        difficulty = Difficulty.EASY,
-        color = Palette.Hedgehog,
-        darkColor = Palette.HedgehogDark,
-    ),
-    FOX(
-        display = "ЛИСА",
-        speech = "Лиса",
-        turnText = "ХОД ЛИСЫ",
-        turnSpeech = "Ход лисы",
-        winSpeech = "Ура! Лиса выиграла",
-        kind = Kind.ANIMAL,
-        difficulty = Difficulty.MEDIUM,
+
+    // --- Соперники за компьютер -------------------------------------------
+
+    ARTEM(
+        display = "АРТЁМ",
+        speech = "Артём",
+        turnText = "ХОД АРТЁМА",
+        turnSpeech = "Ход Артёма",
+        winSpeech = "Ура! Артём выиграл",
+        kind = Kind.COMPUTER,
         color = Palette.Fox,
         darkColor = Palette.FoxDark,
     ),
-    BEAR(
-        display = "МИШКА",
-        speech = "Мишка",
-        turnText = "ХОД МИШКИ",
-        turnSpeech = "Ход мишки",
-        winSpeech = "Ура! Мишка выиграл",
-        kind = Kind.ANIMAL,
-        difficulty = Difficulty.MEDIUM,
-        color = Palette.Bear,
-        darkColor = Palette.BearDark,
+    BABA_IRA(
+        display = "БАБА ИРА",
+        speech = "Баба Ира",
+        turnText = "ХОД БАБЫ ИРЫ",
+        turnSpeech = "Ход бабы Иры",
+        winSpeech = "Ура! Баба Ира выиграла",
+        kind = Kind.COMPUTER,
+        color = Palette.Plum,
+        darkColor = Palette.PlumDark,
     ),
-    WOLF(
-        display = "ВОЛК",
-        speech = "Волк",
-        turnText = "ХОД ВОЛКА",
-        turnSpeech = "Ход волка",
-        winSpeech = "Ура! Волк выиграл",
-        kind = Kind.ANIMAL,
-        difficulty = Difficulty.HARD,
+    ROMA(
+        display = "РОМА",
+        speech = "Рома",
+        turnText = "ХОД РОМЫ",
+        turnSpeech = "Ход Ромы",
+        winSpeech = "Ура! Рома выиграл",
+        kind = Kind.COMPUTER,
+        color = Palette.Grass,
+        darkColor = Palette.GrassDark,
+    ),
+    BABA_LUBA(
+        display = "БАБА ЛЮБА",
+        speech = "Баба Люба",
+        turnText = "ХОД БАБЫ ЛЮБЫ",
+        turnSpeech = "Ход бабы Любы",
+        winSpeech = "Ура! Баба Люба выиграла",
+        kind = Kind.COMPUTER,
+        color = Palette.Mint,
+        darkColor = Palette.MintDark,
+    ),
+    HABIB(
+        display = "ХАБИБ",
+        speech = "Хабиб",
+        turnText = "ХОД ХАБИБА",
+        turnSpeech = "Ход Хабиба",
+        winSpeech = "Ура! Хабиб выиграл",
+        kind = Kind.COMPUTER,
         color = Palette.Wolf,
         darkColor = Palette.WolfDark,
     ),
-    LION(
-        display = "ЛЕВ",
-        speech = "Лев",
-        turnText = "ХОД ЛЬВА",
-        turnSpeech = "Ход льва",
-        winSpeech = "Ура! Лев выиграл",
-        kind = Kind.ANIMAL,
-        difficulty = Difficulty.HARD,
+    DEDA_MISHA(
+        display = "ДЕДА МИША",
+        speech = "Деда Миша",
+        turnText = "ХОД ДЕДЫ МИШИ",
+        turnSpeech = "Ход деды Миши",
+        winSpeech = "Ура! Деда Миша выиграл",
+        kind = Kind.COMPUTER,
+        color = Palette.Hedgehog,
+        darkColor = Palette.HedgehogDark,
+    ),
+    UCHITEL(
+        display = "УЧИТЕЛЬ",
+        speech = "Учитель",
+        turnText = "ХОД УЧИТЕЛЯ",
+        turnSpeech = "Ход учителя",
+        winSpeech = "Ура! Учитель выиграл",
+        kind = Kind.COMPUTER,
         color = Palette.Lion,
         darkColor = Palette.LionMane,
+    ),
+    MATVEY(
+        display = "МАТВЕЙ",
+        speech = "Матвей",
+        turnText = "ХОД МАТВЕЯ",
+        turnSpeech = "Ход Матвея",
+        winSpeech = "Ура! Матвей выиграл",
+        kind = Kind.COMPUTER,
+        color = Palette.Krya,
+        darkColor = Palette.KryaDark,
+    ),
+    ILYA(
+        display = "ИЛЬЯ",
+        speech = "Илья",
+        turnText = "ХОД ИЛЬИ",
+        turnSpeech = "Ход Ильи",
+        winSpeech = "Ура! Илья выиграл",
+        kind = Kind.COMPUTER,
+        color = Palette.Bear,
+        darkColor = Palette.BearDark,
     );
 
-    /** Сколько звёздочек силы рисовать под картинкой: 1 — легко, 3 — трудно. */
-    val strength: Int
-        get() = when (difficulty) {
-            Difficulty.EASY -> 1
-            Difficulty.MEDIUM -> 2
-            Difficulty.HARD -> 3
-            null -> 0
-        }
+    /**
+     * Все компьютерные соперники играют на лёгком уровне: ходят почти наугад
+     * и часто проигрывают, но не поддаются демонстративно.
+     */
+    val difficulty: Difficulty
+        get() = Difficulty.EASY
 
     companion object {
         /** Кто всегда ходит первым. */
@@ -143,9 +166,13 @@ enum class Cast(
         /** Живые соперники: игра один на один на одном телефоне. */
         val PEOPLE: List<Cast> = listOf(MAMA, PAPA)
 
-        /** Компьютерные соперники, от самого слабого к самому сильному. */
-        val ANIMALS: List<Cast> = listOf(KRYA, HEDGEHOG, FOX, BEAR, WOLF, LION)
+        /** Соперники за компьютер. */
+        val COMPUTER: List<Cast> = listOf(
+            ARTEM, BABA_IRA, ROMA,
+            BABA_LUBA, HABIB, DEDA_MISHA,
+            UCHITEL, MATVEY, ILYA,
+        )
 
-        val DEFAULT_OPPONENT: Cast = KRYA
+        val DEFAULT_OPPONENT: Cast = ARTEM
     }
 }

@@ -53,6 +53,11 @@ object Palette {
     val LionMane = Color(0xFFC9821F)
 
     val Mint = Color(0xFF6FCF97)
+    val MintDark = Color(0xFF3F9268)
+    val Plum = Color(0xFFC97BB0)
+    val PlumDark = Color(0xFF8E4D79)
+    val Grass = Color(0xFF8CBF5A)
+    val GrassDark = Color(0xFF5B8433)
 
     /** Цвета конфетти и звёздочек. */
     val Confetti = listOf(Pink, Sky, Mint, Lilac, Krya, Fox)

@@ -210,26 +210,6 @@ fun StarIcon(modifier: Modifier = Modifier, color: Color = Palette.Krya, filled:
     IconCanvas(modifier) { center, radius -> drawStar(center, radius, color, filled) }
 }
 
-/**
- * Звёздочки силы соперника: одна — играет слабо, три — играет идеально.
- * Цифр и слов тут нет намеренно: звёздочки понятны без чтения.
- */
-@Composable
-fun StrengthStars(count: Int, modifier: Modifier = Modifier, total: Int = 3) {
-    Canvas(modifier = modifier) {
-        val step = size.width / total
-        val radius = (step * 0.34f).coerceAtMost(size.height * 0.46f)
-        for (i in 0 until total) {
-            drawStar(
-                center = Offset(step * (i + 0.5f), size.height / 2f),
-                radius = radius,
-                color = if (i < count) Palette.Fox else Palette.Pencil,
-                filled = i < count,
-            )
-        }
-    }
-}
-
 /** Сердечки для ничьей: показывают, что дружба важнее победы. */
 fun DrawScope.drawHeart(center: Offset, radius: Float, color: Color) {
     val path = Path().apply {

@@ -25,14 +25,14 @@ import androidx.compose.ui.unit.dp
  * Стартовый экран: ни меню, ни настроек, только лица.
  *
  * Сверху Кира — она играет всегда. Ниже два живых соперника (мама и папа):
- * это игра вдвоём на одном телефоне. Ещё ниже звери — это игра с компьютером,
- * звёздочки под каждым показывают, насколько сильно он играет.
+ * это игра вдвоём на одном телефоне. Ещё ниже девять знакомых лиц —
+ * это игра с компьютером, и все они играют одинаково легко.
  */
 @Composable
 fun StartScreen(
     soundOn: Boolean,
     onPerson: (Cast) -> Unit,
-    onAnimal: (Cast) -> Unit,
+    onComputer: (Cast) -> Unit,
     onToggleSound: () -> Unit,
     onExit: () -> Unit,
 ) {
@@ -84,22 +84,21 @@ fun StartScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            // Компьютерные соперники: звёздочки показывают силу
+            // Соперники за компьютер: девять лиц, все играют одинаково легко
             RobotBadge(Modifier.size(58.dp))
-            val animals = Cast.ANIMALS
-            for (rowIndex in 0 until (animals.size + 2) / 3) {
+            val rivals = Cast.COMPUTER
+            for (rowIndex in 0 until (rivals.size + 2) / 3) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 6.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly,
                 ) {
-                    for (animal in animals.drop(rowIndex * 3).take(3)) {
+                    for (rival in rivals.drop(rowIndex * 3).take(3)) {
                         CharacterButton(
-                            character = animal,
-                            onClick = { onAnimal(animal) },
-                            iconSize = 84.dp,
-                            showStrength = true,
+                            character = rival,
+                            onClick = { onComputer(rival) },
+                            iconSize = 82.dp,
                         )
                     }
                 }

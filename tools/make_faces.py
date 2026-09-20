@@ -21,9 +21,20 @@ ART = os.path.join(ROOT, "art")
 OUT = os.path.join(ROOT, "app", "src", "main", "res", "drawable-nodpi")
 
 FACES = {
+    # Семья
     "face_kira": "kira-source.jpg",
     "face_mama": "mama-source.jpg",
     "face_papa": "papa-source.jpg",
+    # Соперники за компьютер
+    "face_artem": "artem-source.jpg",
+    "face_baba_ira": "baba-ira-source.jpg",
+    "face_roma": "roma-source.jpg",
+    "face_baba_luba": "baba-luba-source.jpg",
+    "face_habib": "habib-source.jpg",
+    "face_deda_misha": "deda-misha-source.jpg",
+    "face_uchitel": "uchitel-source.jpg",
+    "face_matvey": "matvey-source.jpg",
+    "face_ilya": "ilya-source.jpg",
 }
 
 SIZE = 512          # сторона готовой картинки

@@ -41,7 +41,7 @@ class MainActivity : ComponentActivity() {
                         Screen.START -> StartScreen(
                             soundOn = ui.soundOn,
                             onPerson = model::playWithPerson,
-                            onAnimal = model::playWithAnimal,
+                            onComputer = model::playWithComputer,
                             onToggleSound = model::toggleSound,
                             onExit = { finish() },
                         )

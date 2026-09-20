@@ -253,7 +253,6 @@ fun CharacterButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     iconSize: Dp = 96.dp,
-    showStrength: Boolean = false,
 ) {
     var pressed by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(
@@ -299,14 +298,6 @@ fun CharacterButton(
             maxLines = 1,
             textAlign = TextAlign.Center,
         )
-        if (showStrength) {
-            StrengthStars(
-                count = character.strength,
-                modifier = Modifier
-                    .width(62.dp)
-                    .height(18.dp),
-            )
-        }
     }
 }
 

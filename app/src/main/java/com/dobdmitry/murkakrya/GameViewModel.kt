@@ -59,7 +59,7 @@ data class UiState(
 
     val turn: Side? get() = (state as? GameState.Playing)?.turn
 
-    val difficulty: Difficulty get() = opponent.difficulty ?: Difficulty.EASY
+    val difficulty: Difficulty get() = opponent.difficulty
 
     /** Надпись, которая сейчас висит над полем. */
     val banner: Phrase
@@ -98,8 +98,8 @@ class GameViewModel(
     /** Игра один на один: Кира против мамы или папы. */
     fun playWithPerson(person: Cast) = startGame(GameMode.TWO_PLAYERS, person)
 
-    /** Игра против компьютера: соперник — зверь, его сила зашита в него самого. */
-    fun playWithAnimal(animal: Cast) = startGame(GameMode.VERSUS_AI, animal)
+    /** Игра против компьютера: соперник — одно из знакомых лиц. */
+    fun playWithComputer(rival: Cast) = startGame(GameMode.VERSUS_AI, rival)
 
     private fun startGame(mode: GameMode, opponent: Cast) {
         aiJob?.cancel()
