@@ -7,23 +7,6 @@ import kira.core.Difficulty
 enum class Kind { HUMAN, ANIMAL }
 
 /**
- * Где на картинке лица находятся глаза — чтобы игра умела их закрывать,
- * когда персонаж моргает. Доли от стороны картинки.
- *
- * Значения считает скрипт tools/find_eyes.py: он же кладёт в art/preview
- * картинки с закрытыми глазами, на которых видно, попали веки или нет.
- */
-data class EyeSpots(
-    val leftX: Float,
-    val leftY: Float,
-    val rightX: Float,
-    val rightY: Float,
-    val width: Float,
-    val height: Float,
-    val skin: Color,
-)
-
-/**
  * Все герои игры в одном месте.
  *
  * Хотите другое имя или другого героя — правите только эту таблицу
@@ -43,7 +26,6 @@ enum class Cast(
     val difficulty: Difficulty?,
     val color: Color,
     val darkColor: Color,
-    val eyes: EyeSpots? = null,
 ) {
     KIRA(
         display = "КИРА",
@@ -55,7 +37,6 @@ enum class Cast(
         difficulty = null,
         color = Palette.Pink,
         darkColor = Palette.PinkDark,
-        eyes = EyeSpots(0.336f, 0.588f, 0.639f, 0.617f, 0.123f, 0.100f, Color(0xFFFDDCB9)),
     ),
     MAMA(
         display = "МАМА",
@@ -67,7 +48,6 @@ enum class Cast(
         difficulty = null,
         color = Palette.Lilac,
         darkColor = Palette.LilacDark,
-        eyes = EyeSpots(0.327f, 0.502f, 0.636f, 0.531f, 0.133f, 0.107f, Color(0xFFFAD8B3)),
     ),
     PAPA(
         display = "ПАПА",
@@ -79,7 +59,6 @@ enum class Cast(
         difficulty = null,
         color = Palette.Sky,
         darkColor = Palette.SkyDark,
-        eyes = EyeSpots(0.306f, 0.568f, 0.671f, 0.564f, 0.145f, 0.131f, Color(0xFFFBD9B4)),
     ),
     KRYA(
         display = "КРЯ",

@@ -423,45 +423,6 @@ fun DrawScope.drawFaceImage(image: ImageBitmap, center: Offset, radius: Float, a
     )
 }
 
-/**
- * Закрытые глаза для лиц-картинок: перекрываем зрачок цветом кожи и рисуем
- * дугу-ресничку. Моргание короткое (около 120 мс), поэтому закрываем глаза
- * целиком, без промежуточных кадров — так выходит аккуратная улыбка глазами.
- */
-fun DrawScope.drawEyelids(
-    eyes: EyeSpots,
-    center: Offset,
-    radius: Float,
-    alpha: Float = 1f,
-) {
-    val side = radius * 2.30f
-    val left = center.x - side / 2f
-    val top = center.y - side / 2f
-    val halfWidth = maxOf(eyes.width, 0.055f) * side * 0.75f
-    val halfHeight = maxOf(eyes.height, 0.055f) * side * 0.72f
-    val lid = eyes.skin.copy(alpha = alpha)
-    val lash = Palette.Ink.copy(alpha = alpha)
-
-    for (spot in listOf(eyes.leftX to eyes.leftY, eyes.rightX to eyes.rightY)) {
-        val cx = left + spot.first * side
-        val cy = top + spot.second * side
-        drawOval(
-            color = lid,
-            topLeft = Offset(cx - halfWidth * 1.25f, cy - halfHeight * 1.45f),
-            size = Size(halfWidth * 2.5f, halfHeight * 2.6f),
-        )
-        drawArc(
-            color = lash,
-            startAngle = 200f,
-            sweepAngle = 140f,
-            useCenter = false,
-            topLeft = Offset(cx - halfWidth, cy - halfHeight * 0.9f),
-            size = Size(halfWidth * 2f, halfHeight * 2f),
-            style = Stroke(width = side * 0.012f, cap = StrokeCap.Round),
-        )
-    }
-}
-
 // --- Общая точка входа ------------------------------------------------------
 
 fun DrawScope.drawCharacter(
@@ -473,9 +434,9 @@ fun DrawScope.drawCharacter(
     image: ImageBitmap? = null,
 ) {
     if (image != null) {
+        // У людей лицо — готовая картинка, глаза на ней уже нарисованы:
+        // веками их не закрываем, живость даёт дыхание и прыжки.
         drawFaceImage(image, center, radius, alpha)
-        val eyes = character.eyes
-        if (eyes != null && blink < 0.45f) drawEyelids(eyes, center, radius, alpha)
         return
     }
     when (character) {
